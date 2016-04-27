@@ -9,7 +9,8 @@ public class MainGomp extends Game {
     GameScreen gameScreen;
 
 
-
+    boolean onePlayer;
+    int level;
 	
 	@Override
 	public void create () {
@@ -17,6 +18,9 @@ public class MainGomp extends Game {
 //        assets = new AssetManager();
 //        assets.load(Constants.MAIN_ATLAS, TextureAtlas.class);
 //        assets.finishLoading();
+
+        onePlayer = true;
+        level = 1;
 
         gameScreen = new GameScreen(this);
         setScreen(gameScreen);

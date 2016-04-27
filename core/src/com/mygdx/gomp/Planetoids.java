@@ -1,12 +1,9 @@
 package com.mygdx.gomp;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.MassData;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
@@ -19,7 +16,6 @@ public class Planetoids {
     private static final String TAG = Planetoids.class.getName();
 
     Array<Body> planetoidBodies;
-    Array<Float> planetoidMasses;
 
     /**
      *
@@ -35,8 +31,6 @@ public class Planetoids {
             Body planetoidBody;
             CircleShape planetoidShape = new CircleShape();
             float radius = planetoid.getFloat("radius");
-            MassData massData = new MassData();
-            massData.mass = calculateMass(radius);
 
             planetoidBodyDef.position.set(
                     planetoid.getFloat("x"),
@@ -46,15 +40,10 @@ public class Planetoids {
             planetoidShape.setRadius(radius);
             planetoidBody.createFixture(planetoidShape, 1f);
             planetoidShape.dispose();
-            planetoidBody.setUserData(massData);
+            planetoidBody.setUserData(new UserData(radius));
 
             planetoidBodies.add(planetoidBody);
         }
-    }
-
-    private float calculateMass(float radius) {
-        float volume = C.PI_4_3RDS * radius * radius * radius;
-        return C.PLANETOID_DENSITY * volume;
     }
 
     /**
@@ -67,17 +56,62 @@ public class Planetoids {
 
         for (Body planetoid: planetoidBodies) {
             Vector2 toPlanet = new Vector2(planetoid.getPosition()).sub(position);
-            float dist2 = toPlanet.len2() * 100000f;
+            float dist2 = toPlanet.len2() * C.INTERPLANETOID_DISTANCE_MULTIPLIER;
 //            Gdx.app.log(TAG, "dist2: " + dist2);
-//            Gdx.app.log(TAG, "mass: " + ((MassData) planetoid.getUserData()).mass);
-            float force = C.GRAVITY * ((MassData) planetoid.getUserData()).mass * C.FIGHTER_MASS / dist2;
+//            Gdx.app.log(TAG, "mass: " + ((UserData) planetoid.getUserData()).mass);
+            float force = C.GRAVITY * ((UserData) planetoid.getUserData()).mass * C.FIGHTER_MASS / dist2;
 
 //            Gdx.app.log(TAG, "force: " + force);
             toPlanet.setLength(force);
-            totalForce.add(toPlanet);
+
+            if (isOnSurface(planetoid, position)) {
+                return toPlanet;
+            } else {
+                totalForce.add(toPlanet);
+            }
         }
 
         return totalForce;
     }
 
+    public boolean isOnAnySurface(Vector2 position) {
+        for (Body planetoid: planetoidBodies) {
+            if (isOnSurface(planetoid, position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isOnSurface(Body planetoid, Vector2 position) {
+        float threshold = ((UserData) planetoid.getUserData()).radius;
+        threshold += C.FIGHTER_HEIGHT;
+
+        if (position.dst(planetoid.getPosition()) < threshold * C.GROUNDED_THRESHOLD_MULTIPLIER) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Data object for planetoid Body instance using the
+     * setUserData method.
+     */
+    private class UserData {
+        public float radius;
+        public float mass;
+
+        public UserData(float radius) {
+            this.radius = radius;
+            this.mass = calculateMass(radius);
+        }
+    }
+
+    private float calculateMass(float radius) {
+        // Volume based
+//        float volume = C.PI_4_3RDS * radius * radius * radius;
+        // Area based
+        float volume = C.PI * radius * radius;
+        return C.PLANETOID_DENSITY * volume;
+    }
 }

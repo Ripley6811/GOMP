@@ -2,19 +2,19 @@
   "notes": "First planetoid is player 1's base and 2nd planetoid is player 2's base",
   "levels": [
     [
-      {"x": 0, "y": 0, "radius": 20},
-      {"x": 80, "y": 0, "radius": 20},
-      {"x": 40, "y": 20, "radius": 6},
-      {"x": 40, "y": -20, "radius": 6}
+      {"x": 0, "y": 0, "radius": 30},
+      {"x": 200, "y": 0, "radius": 30},
+      {"x": 100, "y": 30, "radius": 20},
+      {"x": 100, "y": -30, "radius": 20}
     ],
     [
       {"x": 0, "y": 0, "radius": 20},
-      {"x": 100, "y": 0, "radius": 20},
-      {"x": 35, "y": 26, "radius": 10},
-      {"x": 50, "y": 0, "radius": 10},
-      {"x": 65, "y": -26, "radius": 10},
-      {"x": 64, "y": 20, "radius": 5},
-      {"x": 36, "y": -20, "radius": 5}
+      {"x": 200, "y": 0, "radius": 20},
+      {"x": 70, "y": 26, "radius": 10},
+      {"x": 100, "y": 0, "radius": 10},
+      {"x": 130, "y": -26, "radius": 10},
+      {"x": 138, "y": 20, "radius": 5},
+      {"x": 72, "y": -20, "radius": 5}
     ]
   ]
 }
