@@ -2,6 +2,7 @@ package com.mygdx.gomp.Constants;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
@@ -10,10 +11,10 @@ import com.badlogic.gdx.utils.JsonValue;
  */
 public class C {
     /** LOGGING LEVELS : CHOOSE ONE */
-    public static final int LOG_LEVEL = Application.LOG_NONE;
+//    public static final int LOG_LEVEL = Application.LOG_NONE;
 //    public static final int LOG_LEVEL = Application.LOG_ERROR;
 //    public static final int LOG_LEVEL = Application.LOG_INFO;
-//    public static final int LOG_LEVEL = Application.LOG_DEBUG;
+    public static final int LOG_LEVEL = Application.LOG_DEBUG;
 
     /** WORLD CONSTANTS */
     // Rotation speed cap when on or close to surface.
@@ -36,4 +37,11 @@ public class C {
     public static final float FIGHTER_MASS = 2000f;  // kg
     public static final float FIGHTER_WALK_SPEED = 3000f;  // kg
     public static final float FIGHTER_JUMP_SPEED = 50000f;  // kg
+    public static final float LASER_SPEED = 50000f;
+    public static final float LASER_COOLDOWN = 0.1f;
+
+    /** KEYBOARD MAPPING */
+    public static final int MOVE_LEFT = Input.Keys.A;
+    public static final int MOVE_RIGHT = Input.Keys.D;
+    public static final int MOVE_JUMP = Input.Keys.W;
 }

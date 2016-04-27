@@ -1,14 +1,12 @@
 package com.mygdx.gomp;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.JsonValue;
 import com.mygdx.gomp.Constants.C;
 
 /**
@@ -19,6 +17,8 @@ public class Fighter {
     private boolean flyMode;
     private boolean grounded;
     private boolean jumping;
+    private boolean faceRight;
+    private float laserCooldown = 0f;
     public Body body;  // Maintains world position
     public Vector2 down;
 
@@ -26,6 +26,7 @@ public class Fighter {
         flyMode = false;
         grounded = true;
         jumping = false;
+        faceRight = true;
         down = new Vector2();
 
         BodyDef bodyDef = new BodyDef();
@@ -52,6 +53,14 @@ public class Fighter {
 //        square.dispose();
     }
 
+    public boolean laserReady() {
+        if (laserCooldown <= 0f) {
+            laserCooldown = C.LASER_COOLDOWN;
+            return true;
+        }
+        return false;
+    }
+
     public boolean isGrounded() {
         return grounded;
     }
@@ -68,7 +77,7 @@ public class Fighter {
 
     public void applyLandFriction(Planetoids planetoids) {
         grounded = planetoids.isOnAnySurface(this.body.getPosition());
-        Gdx.app.log(TAG, "grounded: " + grounded);
+
         if (grounded) {
             Vector2 v = new Vector2(this.body.getLinearVelocity());
             v.scl(0.8f);
@@ -77,21 +86,22 @@ public class Fighter {
     }
 
 
-    public void queryPlayerInput() {
-        Vector2 position = this.body.getPosition();
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+    public void queryPlayerMovementInput() {
+        if (Gdx.input.isKeyPressed(C.MOVE_LEFT)) {
+            faceRight = false;
             if (!flyMode && grounded) {
                 Vector2 vLeft = new Vector2(this.down).rotate90(-1).setLength(C.FIGHTER_WALK_SPEED);
                 this.body.applyForceToCenter(vLeft, true);
             }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+        if (Gdx.input.isKeyPressed(C.MOVE_RIGHT)) {
+            faceRight = true;
             if (!flyMode && grounded) {
                 Vector2 vRight = new Vector2(this.down).rotate90(1).setLength(C.FIGHTER_WALK_SPEED);
                 this.body.applyForceToCenter(vRight, true);
             }
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+        if (Gdx.input.isKeyPressed(C.MOVE_JUMP)) {
             if (grounded && !jumping) {
                 Vector2 vUp = new Vector2(this.down).rotate(180).setLength(C.FIGHTER_JUMP_SPEED);
 //                this.body.applyLinearImpulse(vUp, position, true);
@@ -100,5 +110,9 @@ public class Fighter {
             }
 //            if (jumping)
         }
+    }
+
+    public void render(float delta) {
+        laserCooldown -= delta;
     }
 }
