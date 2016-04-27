@@ -9,7 +9,7 @@ public class DesktopLauncher {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = "GOMP";
 		cfg.height = 800;
-		cfg.width = 800;
+		cfg.width = 1200;
 		new LwjglApplication(new MainGomp(), cfg);
 	}
 }

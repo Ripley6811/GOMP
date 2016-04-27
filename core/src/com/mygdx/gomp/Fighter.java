@@ -1,6 +1,8 @@
 package com.mygdx.gomp;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -19,10 +21,14 @@ public class Fighter {
     private boolean jumping;
     private boolean faceRight;
     private float laserCooldown = 0f;
+    private float grenadeCooldown = 0f;
     public Body body;  // Maintains world position
     public Vector2 down;
 
     public Fighter(World world, float x, float y) {
+        this(world, x, y, true);
+    }
+    public Fighter(World world, float x, float y, boolean isPlayer) {
         flyMode = false;
         grounded = true;
         jumping = false;
@@ -45,6 +51,11 @@ public class Fighter {
 //        fixtureDef.shape = square;
         fixtureDef.density = 0.8f;
         fixtureDef.friction = 0.1f;
+        if (isPlayer) {
+            fixtureDef.filter.groupIndex = C.GROUP_PLAYER;
+        } else {
+            fixtureDef.filter.groupIndex = C.GROUP_BANDIT;
+        }
 //        fixtureDef.restitution = 0f; // Make it bounce a little bit
 
         body.createFixture(fixtureDef);
@@ -61,6 +72,14 @@ public class Fighter {
         return false;
     }
 
+    public boolean grenadeReady() {
+        if (grenadeCooldown <= 0f) {
+            grenadeCooldown = C.GRENADE_COOLDOWN;
+            return true;
+        }
+        return false;
+    }
+
     public boolean isGrounded() {
         return grounded;
     }
@@ -71,7 +90,7 @@ public class Fighter {
 
     public void applyGravity(Planetoids planetoids) {
         Vector2 pos = this.body.getPosition();
-        this.down.set(planetoids.getGravityVector(pos));
+        this.down.set(planetoids.getGravityVector(pos, C.FIGHTER_MASS));
         this.body.applyForceToCenter(this.down, true);
     }
 
@@ -112,7 +131,24 @@ public class Fighter {
         }
     }
 
-    public void render(float delta) {
+    public void render(float delta, ShapeRenderer renderer) {
         laserCooldown -= delta;
+        grenadeCooldown -= delta;
+
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        renderer.setColor(.8f, .8f, .9f, 1f);
+        Vector2 pos = body.getPosition();
+        renderer.translate(pos.x, pos.y, 0f);
+        renderer.rotate(0, 0, 1, down.angle() + 90);
+        // Draw character at center
+        renderer.ellipse(- C.FIGHTER_HEIGHT / 4, - C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT);
+
+        renderer.setColor(.7f, .5f, .5f, 1f);
+        renderer.arc(0f, - C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2.5f, 0f, 180f, 10);
+
+
+        renderer.rotate(0, 0, -1, down.angle()+90);
+        renderer.translate(-pos.x, -pos.y, 0f);
+        renderer.end();
     }
 }

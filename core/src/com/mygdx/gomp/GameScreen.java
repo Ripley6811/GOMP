@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -27,6 +28,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private MainGomp game;
     private ExtendViewport viewport;
     private OrthographicCamera camera;
+    private ShapeRenderer renderer;
 
     private World world;
     private Box2DDebugRenderer debugRenderer;
@@ -51,6 +53,10 @@ public class GameScreen extends InputAdapter implements Screen {
         viewport = new ExtendViewport(100, 100, camera);
         viewport.apply(true);
         debugRenderer = new Box2DDebugRenderer();
+
+        renderer = new ShapeRenderer();
+        renderer.setAutoShapeType(true);
+        renderer.setProjectionMatrix(camera.combined);
     }
 
     @Override
@@ -71,7 +77,8 @@ public class GameScreen extends InputAdapter implements Screen {
         );
         bandit = new Fighter(world,
                 p2Base.getFloat("x"),
-                p2Base.getFloat("y") - p2Base.getFloat("radius")
+                p2Base.getFloat("y") - p2Base.getFloat("radius"),
+                false
         );
 
         // Init bullet manager
@@ -93,21 +100,28 @@ public class GameScreen extends InputAdapter implements Screen {
         return super.touchUp(screenX, screenY, pointer, button);
     }
 
-    public void queryWeaponsInput() {
+    public void queryWeaponsInput(float delta) {
         Vector2 pt = viewport.unproject(
                 new Vector2(Gdx.input.getX(), Gdx.input.getY())
         );
 
         if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && player.laserReady()) {
             Vector2 playerPos = player.body.getPosition();
-            Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.FIGHTER_HEIGHT);
+            Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.LASER_START_OFFSET);
             bullets.addLaser(playerPos.add(heading), heading);
+        }
+
+        if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT) && player.grenadeReady()) {
+            Vector2 playerPos = player.body.getPosition();
+            Vector2 playerVel = player.body.getLinearVelocity();
+            Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.LASER_START_OFFSET);
+            bullets.addGrenade(playerPos.add(heading), playerVel, heading);
         }
     }
 
     @Override
     public void render(float delta) {
-
+        bullets.applyGravity(planetoids);
         player.applyGravity(planetoids);
         player.applyLandFriction(planetoids);
         if (onePlayer) {
@@ -116,10 +130,10 @@ public class GameScreen extends InputAdapter implements Screen {
         }
         player.queryPlayerMovementInput();
 
-        queryWeaponsInput();
+        queryWeaponsInput(delta);
 
         // Center camera on player.
-        viewport.getCamera().position.set(player.body.getPosition(), 0f);
+        camera.position.set(player.body.getPosition(), 0f);
 
         // Rotate camera so that player stands on top of planetoid.
         if (!player.isFlying()) {
@@ -131,20 +145,24 @@ public class GameScreen extends InputAdapter implements Screen {
                 rotateBit = Math.min(rotateBit, C.ROTATE_FREEFALL_CAP);
                 rotateBit = Math.max(rotateBit, -C.ROTATE_FREEFALL_CAP);
             }
-            viewport.getCamera().rotate(rotateBit, 0, 0, 1);
+            camera.rotate(rotateBit, 0, 0, 1);
             rotation += rotateBit;  // Update current rotation reference
             rotation = (rotation + 360f) % 360f;  // Normalize degree value
         }
-        viewport.getCamera().update();
+        camera.update();
+        renderer.setProjectionMatrix(camera.combined);
 
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        debugRenderer.render(world, viewport.getCamera().combined);
+//        debugRenderer.render(world, camera.combined);
 
 
-        player.render(delta);
+        player.render(delta, renderer);
+        bandit.render(delta, renderer);
+        bullets.render(renderer);
+        planetoids.render(renderer);
 
         world.step(delta, 6, 2);
     }
@@ -222,7 +240,20 @@ public class GameScreen extends InputAdapter implements Screen {
                 Gdx.app.debug(TAG, "Contact Fixture B is Player");
 
             }
-//            if (contact.getFixtureB().getUserData())
+            if (contact.getFixtureB().getBody().isBullet()) {
+                Bullet bullet = (Bullet) contact.getFixtureB().getUserData();
+                Gdx.app.debug(TAG, "Contact Fixture B is Bullet:" + bullet.type);
+                if (bullet.type == "LASER") {
+                    bullet.hasCollided = true;
+                }
+                if (bullet.type == "GRENADE") {
+                    if (contact.getFixtureA().getBody().getUserData() instanceof Planetoids.PlanetoidData) {
+
+                    } else {
+                        bullet.hasCollided = true;
+                    }
+                }
+            }
 
             if (onePlayer) {
                 if (contact.getFixtureA().getBody() == bandit.body) {

@@ -1,5 +1,6 @@
 package com.mygdx.gomp;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -40,7 +41,7 @@ public class Planetoids {
             planetoidShape.setRadius(radius);
             planetoidBody.createFixture(planetoidShape, 1f);
             planetoidShape.dispose();
-            planetoidBody.setUserData(new UserData(radius));
+            planetoidBody.setUserData(new PlanetoidData(radius));
 
             planetoidBodies.add(planetoidBody);
         }
@@ -51,7 +52,7 @@ public class Planetoids {
      * @param position Fighter position.
      * @return Gravitational force vector.
      */
-    public Vector2 getGravityVector(Vector2 position) {
+    public Vector2 getGravityVector(Vector2 position, float mass) {
         Vector2 totalForce = new Vector2(0, 0);
 
         for (Body planetoid: planetoidBodies) {
@@ -59,7 +60,7 @@ public class Planetoids {
             float dist2 = toPlanet.len2() * C.INTERPLANETOID_DISTANCE_MULTIPLIER;
 //            Gdx.app.log(TAG, "dist2: " + dist2);
 //            Gdx.app.log(TAG, "mass: " + ((UserData) planetoid.getUserData()).mass);
-            float force = C.GRAVITY * ((UserData) planetoid.getUserData()).mass * C.FIGHTER_MASS / dist2;
+            float force = C.GRAVITY * ((PlanetoidData) planetoid.getUserData()).mass * mass / dist2;
 
 //            Gdx.app.log(TAG, "force: " + force);
             toPlanet.setLength(force);
@@ -84,7 +85,7 @@ public class Planetoids {
     }
 
     public boolean isOnSurface(Body planetoid, Vector2 position) {
-        float threshold = ((UserData) planetoid.getUserData()).radius;
+        float threshold = ((PlanetoidData) planetoid.getUserData()).radius;
         threshold += C.FIGHTER_HEIGHT;
 
         if (position.dst(planetoid.getPosition()) < threshold * C.GROUNDED_THRESHOLD_MULTIPLIER) {
@@ -97,11 +98,13 @@ public class Planetoids {
      * Data object for planetoid Body instance using the
      * setUserData method.
      */
-    private class UserData {
+    public class PlanetoidData {
+        public String type;
         public float radius;
         public float mass;
 
-        public UserData(float radius) {
+        public PlanetoidData(float radius) {
+            this.type = "PLANETOID";
             this.radius = radius;
             this.mass = calculateMass(radius);
         }
@@ -113,5 +116,15 @@ public class Planetoids {
         // Area based
         float volume = C.PI * radius * radius;
         return C.PLANETOID_DENSITY * volume;
+    }
+
+    public void render(ShapeRenderer renderer) {
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        renderer.setColor(.5f, .3f, .4f, 1f);
+        for (Body rock: planetoidBodies) {
+            Vector2 pos = rock.getPosition();
+            renderer.circle(pos.x, pos.y, ((PlanetoidData) rock.getUserData()).radius, 40);
+        }
+        renderer.end();
     }
 }

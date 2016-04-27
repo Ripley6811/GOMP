@@ -11,10 +11,10 @@ import com.badlogic.gdx.utils.JsonValue;
  */
 public class C {
     /** LOGGING LEVELS : CHOOSE ONE */
-//    public static final int LOG_LEVEL = Application.LOG_NONE;
+    public static final int LOG_LEVEL = Application.LOG_NONE;
 //    public static final int LOG_LEVEL = Application.LOG_ERROR;
 //    public static final int LOG_LEVEL = Application.LOG_INFO;
-    public static final int LOG_LEVEL = Application.LOG_DEBUG;
+//    public static final int LOG_LEVEL = Application.LOG_DEBUG;
 
     /** WORLD CONSTANTS */
     // Rotation speed cap when on or close to surface.
@@ -38,7 +38,20 @@ public class C {
     public static final float FIGHTER_WALK_SPEED = 3000f;  // kg
     public static final float FIGHTER_JUMP_SPEED = 50000f;  // kg
     public static final float LASER_SPEED = 50000f;
+    public static final float LASER_RADIUS = 0.1f;
     public static final float LASER_COOLDOWN = 0.1f;
+    public static final float LASER_RANDOM = 1.5f;  // Degrees error
+    public static final float LASER_LENGTH = 3f;
+    public static final float LASER_START_OFFSET = 2f;
+    // Destroy bullets that fly off into the void.
+    public static final float BULLET_AGE_LIMIT = 300;  // Frames
+    public static final float GRENADE_SPEED = 1000f;
+    public static final float GRENADE_MASS = 100f;
+    public static final float GRENADE_RADIUS = 0.3f;
+    public static final float GRENADE_COOLDOWN = 0.4f;
+    public static final float GRENADE_RANDOM = 1.5f;  // Degrees error
+    public static final int GROUP_PLAYER = -1;
+    public static final int GROUP_BANDIT = -2;
 
     /** KEYBOARD MAPPING */
     public static final int MOVE_LEFT = Input.Keys.A;
