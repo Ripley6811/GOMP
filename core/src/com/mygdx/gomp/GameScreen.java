@@ -1,10 +1,9 @@
 package com.mygdx.gomp;
 
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -18,6 +17,10 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.gomp.Constants.C;
+import com.mygdx.gomp.InputMapper.IM;
+
+import box2dLight.PointLight;
+import box2dLight.RayHandler;
 
 /**
  * Created by Jay on 4/25/2016.
@@ -29,10 +32,12 @@ public class GameScreen extends InputAdapter implements Screen {
     private ExtendViewport viewport;
     private OrthographicCamera camera;
     private ShapeRenderer renderer;
+    private RayHandler rayHandler;
 
     private World world;
     private Box2DDebugRenderer debugRenderer;
 
+    private StarField starField;
     private Planetoids planetoids;
     private Fighter player;
     private Fighter bandit;
@@ -40,6 +45,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private int level;
     private float rotation;
     private boolean onePlayer;
+    private PointLight playerLOS;
 
     public GameScreen(MainGomp game) {
         Gdx.input.setCatchBackKey(true);
@@ -57,6 +63,17 @@ public class GameScreen extends InputAdapter implements Screen {
         renderer = new ShapeRenderer();
         renderer.setAutoShapeType(true);
         renderer.setProjectionMatrix(camera.combined);
+
+        // TODO: Replace this with values based on level
+        starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
+
+        /** ADD LIGHTING */
+        rayHandler = new RayHandler(world);
+        // Base planet view
+        new PointLight(rayHandler, 500, Color.BLACK, 500, 0, 0);
+        // Player view (LOS = line of sight)
+        playerLOS = new PointLight(rayHandler, 500, Color.BLACK, 500, 0, 0);
+        PointLight.setGlobalContactFilter(C.CAT_LIGHT, (short) 0, C.CAT_STATIC);
     }
 
     @Override
@@ -82,7 +99,7 @@ public class GameScreen extends InputAdapter implements Screen {
         );
 
         // Init bullet manager
-        bullets = new Bullets(world);
+        bullets = new Bullets(world, rayHandler);
 
         // Create reference to current rotation
         rotation = 0f;
@@ -105,13 +122,13 @@ public class GameScreen extends InputAdapter implements Screen {
                 new Vector2(Gdx.input.getX(), Gdx.input.getY())
         );
 
-        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && player.laserReady()) {
+        if (IM.isFiringPrimary() && player.laserReady()) {
             Vector2 playerPos = player.body.getPosition();
             Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.LASER_START_OFFSET);
             bullets.addLaser(playerPos.add(heading), heading);
         }
 
-        if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT) && player.grenadeReady()) {
+        if (IM.isFiringSecondary() && player.grenadeReady()) {
             Vector2 playerPos = player.body.getPosition();
             Vector2 playerVel = player.body.getLinearVelocity();
             Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.LASER_START_OFFSET);
@@ -151,6 +168,9 @@ public class GameScreen extends InputAdapter implements Screen {
         }
         camera.update();
         renderer.setProjectionMatrix(camera.combined);
+        rayHandler.setCombinedMatrix(camera);
+
+        playerLOS.setPosition(player.body.getPosition());
 
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -158,11 +178,13 @@ public class GameScreen extends InputAdapter implements Screen {
 
 //        debugRenderer.render(world, camera.combined);
 
-
-        player.render(delta, renderer);
+        starField.render(renderer, player.body.getPosition());
         bandit.render(delta, renderer);
-        bullets.render(renderer);
         planetoids.render(renderer);
+        bullets.render(renderer);
+        player.render(delta, renderer);
+        rayHandler.updateAndRender();
+        // TODO: Draw sunny side of planetoids
 
         world.step(delta, 6, 2);
     }

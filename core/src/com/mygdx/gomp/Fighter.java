@@ -2,7 +2,6 @@ package com.mygdx.gomp;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -42,26 +41,23 @@ public class Fighter {
         body = world.createBody(bodyDef);
         CircleShape circle = new CircleShape();
         circle.setRadius(C.FIGHTER_HEIGHT / 2f);
-//        PolygonShape square = new PolygonShape();
-//        square.setAsBox(C.FIGHTER_HEIGHT / 2f, C.FIGHTER_HEIGHT / 4f);
 
         // Create a fixture definition to apply our shape to
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
-//        fixtureDef.shape = square;
         fixtureDef.density = 0.8f;
         fixtureDef.friction = 0.1f;
         if (isPlayer) {
             fixtureDef.filter.groupIndex = C.GROUP_PLAYER;
+            fixtureDef.filter.categoryBits = C.CAT_PLAYER;
         } else {
             fixtureDef.filter.groupIndex = C.GROUP_BANDIT;
+            fixtureDef.filter.categoryBits = C.CAT_BANDIT;
         }
-//        fixtureDef.restitution = 0f; // Make it bounce a little bit
 
         body.createFixture(fixtureDef);
 
         circle.dispose();
-//        square.dispose();
     }
 
     public boolean laserReady() {

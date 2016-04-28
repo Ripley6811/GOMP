@@ -3,6 +3,8 @@ package com.mygdx.gomp.Constants;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
@@ -23,6 +25,19 @@ public class C {
     public static final float ROTATE_FREEFALL_CAP = ROTATE_SPEED_CAP/20f;
     public static final float PI = 3.14159f;
     public static final float PI_4_3RDS = PI * 4f / 3f;
+    public static final short CAT_LIGHT = 0x0001;
+    public static final short CAT_PLAYER = 0x0002;
+    public static final short CAT_BANDIT = 0x0004;
+    public static final short CAT_BULLET = 0x0008;
+    public static final short CAT_STATIC = 0x0010;
+    public static final int GROUP_PLAYER = -1;
+    public static final int GROUP_BANDIT = -2;
+    public static final int NUMBER_OF_STARS = 1000;
+    public static final float STAR_RADIUS = 0.2f;
+    public static final Color STAR_COLOR = new Color(.4f,.4f,.4f,1f);
+    public static final float STAR_PARALLAX_SCALE = 0.7f;  // 1f = fixed to player
+    public static final Vector2 STARFIELD_CENTER = new Vector2(50, 0);
+    public static final Vector2 STARFIELD_STD = new Vector2(80, 16);
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
@@ -50,8 +65,6 @@ public class C {
     public static final float GRENADE_RADIUS = 0.3f;
     public static final float GRENADE_COOLDOWN = 0.4f;
     public static final float GRENADE_RANDOM = 1.5f;  // Degrees error
-    public static final int GROUP_PLAYER = -1;
-    public static final int GROUP_BANDIT = -2;
 
     /** KEYBOARD MAPPING */
     public static final int MOVE_LEFT = Input.Keys.A;

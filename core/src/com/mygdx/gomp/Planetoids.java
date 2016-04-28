@@ -5,6 +5,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Filter;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
@@ -39,7 +42,18 @@ public class Planetoids {
             );
             planetoidBody = world.createBody(planetoidBodyDef);
             planetoidShape.setRadius(radius);
-            planetoidBody.createFixture(planetoidShape, 1f);
+
+
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.shape = planetoidShape;
+            fixtureDef.density = 1f;
+//            fixtureDef.friction = 0.1f;
+//            fixtureDef.filter.groupIndex = C.GROUP_PLAYER;
+            fixtureDef.filter.categoryBits = C.CAT_STATIC;
+
+//            planetoidBody.createFixture(planetoidShape, 1f);
+            planetoidBody.createFixture(fixtureDef);
+
             planetoidShape.dispose();
             planetoidBody.setUserData(new PlanetoidData(radius));
 
