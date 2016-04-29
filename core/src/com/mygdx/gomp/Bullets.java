@@ -43,8 +43,6 @@ public class Bullets {
     }
 
     public class LaserFire extends Bullet {
-        public Body body;  // Maintains world position
-
         public LaserFire(Vector2 position, Vector2 heading) {
             super("LASER");
 
@@ -71,29 +69,19 @@ public class Bullets {
             circle.dispose();
 
             body.setLinearVelocity(heading.rotate(MathUtils.random(-C.LASER_RANDOM, C.LASER_RANDOM)).setLength2(C.LASER_SPEED));
-        }
 
-        public void destroy() {
-            world.destroyBody(this.body);
+            // Add light
+            light = new PointLight(rayHandler, 5, new Color(1f, 1f, 0.5f, 0.5f), 4, position.x, position.y);
         }
     }
 
     public class MissileFire extends Bullet {
-        public Body body;  // Maintains world position
-
         public MissileFire(Vector2 position, Vector2 heading) {
             super("MISSILE");
-        }
-
-        public void destroy() {
-            world.destroyBody(this.body);
         }
     }
 
     public class GrenadeFire extends Bullet {
-        public Body body;  // Maintains world position
-        private PointLight light;
-
         public GrenadeFire(Vector2 position, Vector2 playerVelocity, Vector2 heading) {
             super("GRENADE");
 
@@ -123,16 +111,7 @@ public class Bullets {
             body.setLinearVelocity(heading.rotate(MathUtils.random(-C.GRENADE_RANDOM, C.GRENADE_RANDOM)).setLength2(C.GRENADE_SPEED).add(playerVelocity));
 
             // Add light/sensor
-            light = new PointLight(rayHandler, 10, Color.BLACK, 20, position.x, position.y);
-        }
-
-        public void updateLightPos() {
-            light.setPosition(body.getPosition());
-        }
-
-        public void destroy() {
-            world.destroyBody(this.body);
-            light.remove();
+            light = new PointLight(rayHandler, 8, Color.BLACK, 25, position.x, position.y);
         }
     }
 
@@ -140,7 +119,7 @@ public class Bullets {
         for (GrenadeFire bullet: grenades) {
             Vector2 pos = bullet.body.getPosition();
             bullet.body.applyForceToCenter(planetoids.getGravityVector(pos, C.GRENADE_MASS), true);
-            bullet.updateLightPos();
+
         }
     }
 
@@ -149,26 +128,30 @@ public class Bullets {
         // TODO: Render explosion.
         for (int i=lasers.size-1; i >= 0; i--) {
             LaserFire bullet = lasers.get(i);
+            bullet.updateLightPos();
             if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.hasCollided = true;
-            if (bullet.hasCollided) lasers.removeIndex(i).destroy();
+            if (bullet.hasCollided) lasers.removeIndex(i).destroy(world);
         }
         for (int i=grenades.size-1; i >= 0; i--) {
             GrenadeFire bullet = grenades.get(i);
+            bullet.updateLightPos();
             if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.hasCollided = true;
-            if (bullet.hasCollided) grenades.removeIndex(i).destroy();
+            if (bullet.hasCollided) grenades.removeIndex(i).destroy(world);
         }
 
-        // TODO: Render non-collided bullets.
+        // TODO: Render live bullets.
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setColor(1, 1, MathUtils.random(.5f, 1f), 1);
         for (LaserFire laser: lasers) {
             Vector2 pos = laser.body.getPosition();
             renderer.line(pos, laser.body.getLinearVelocity().nor().scl(C.LASER_LENGTH).add(pos));
         }
+        renderer.end();
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setColor(MathUtils.random(.5f,1f),1,1,1);
         for (GrenadeFire bullet: grenades) {
             Vector2 pos = bullet.body.getPosition();
-            renderer.circle(pos.x, pos.y, C.GRENADE_RADIUS);
+            renderer.circle(pos.x, pos.y, C.GRENADE_RADIUS, 8);
         }
         renderer.end();
     }

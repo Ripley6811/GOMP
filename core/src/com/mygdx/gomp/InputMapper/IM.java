@@ -18,4 +18,9 @@ public class IM {
             return true;
         return false;
     }
+    public static boolean isTransforming() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.S))
+            return true;
+        return false;
+    }
 }

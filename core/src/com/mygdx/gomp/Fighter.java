@@ -9,6 +9,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.gomp.Constants.C;
+import com.mygdx.gomp.InputMapper.IM;
 
 /**
  * Created by Jay on 4/26/2016.
@@ -23,6 +24,7 @@ public class Fighter {
     private float grenadeCooldown = 0f;
     public Body body;  // Maintains world position
     public Vector2 down;
+    public Vector2 cursorPos;
 
     public Fighter(World world, float x, float y) {
         this(world, x, y, true);
@@ -33,6 +35,7 @@ public class Fighter {
         jumping = false;
         faceRight = true;
         down = new Vector2();
+        cursorPos = new Vector2();
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -91,11 +94,13 @@ public class Fighter {
     }
 
     public void applyLandFriction(Planetoids planetoids) {
+        // Set as grounded if very near a planetoid surface
         grounded = planetoids.isOnAnySurface(this.body.getPosition());
 
         if (grounded) {
+            flyMode = false;
             Vector2 v = new Vector2(this.body.getLinearVelocity());
-            v.scl(0.8f);
+            v.scl(C.SURFACE_SLOW_DOWN);
             this.body.setLinearVelocity(v);
         }
     }
@@ -108,6 +113,10 @@ public class Fighter {
                 Vector2 vLeft = new Vector2(this.down).rotate90(-1).setLength(C.FIGHTER_WALK_SPEED);
                 this.body.applyForceToCenter(vLeft, true);
             }
+            if (flyMode){
+                Vector2 vLeft = new Vector2(this.cursorPos).rotate90(1).setLength(20);
+                this.body.applyLinearImpulse(vLeft, body.getPosition(), true);
+            }
         }
         if (Gdx.input.isKeyPressed(C.MOVE_RIGHT)) {
             faceRight = true;
@@ -115,35 +124,62 @@ public class Fighter {
                 Vector2 vRight = new Vector2(this.down).rotate90(1).setLength(C.FIGHTER_WALK_SPEED);
                 this.body.applyForceToCenter(vRight, true);
             }
-        }
-        if (Gdx.input.isKeyPressed(C.MOVE_JUMP)) {
-            if (grounded && !jumping) {
-                Vector2 vUp = new Vector2(this.down).rotate(180).setLength(C.FIGHTER_JUMP_SPEED);
-//                this.body.applyLinearImpulse(vUp, position, true);
-                this.body.applyForceToCenter(vUp, true);
-//                jumping = true;
+            if (flyMode){
+                Vector2 vRight = new Vector2(this.cursorPos).rotate90(-1).setLength(20);
+                this.body.applyLinearImpulse(vRight, body.getPosition(), true);
             }
-//            if (jumping)
+        }
+        if (!flyMode && Gdx.input.isKeyJustPressed(C.MOVE_JUMP)) {
+            if (grounded) {
+                Vector2 vUp = new Vector2(this.down).rotate(180).setLength(C.FIGHTER_JUMP_SPEED);
+                this.body.applyForceToCenter(vUp, true);
+            } else {
+                flyMode = true;
+            }
+        }
+        if (flyMode && IM.isTransforming() && !grounded) {
+            flyMode = false;
+        }
+        if (flyMode && Gdx.input.isKeyPressed(C.MOVE_JUMP)) {
+            Vector2 flyVector = new Vector2(this.cursorPos).setLength(20);
+            this.body.applyLinearImpulse(flyVector, body.getPosition(), true);
         }
     }
 
-    public void render(float delta, ShapeRenderer renderer) {
+    public void render(float delta, ShapeRenderer renderer, Vector2 cursorPos) {
+        Vector2 pos = body.getPosition();
+        this.cursorPos.set(cursorPos.sub(pos));
         laserCooldown -= delta;
         grenadeCooldown -= delta;
 
         renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(.8f, .8f, .9f, 1f);
-        Vector2 pos = body.getPosition();
         renderer.translate(pos.x, pos.y, 0f);
-        renderer.rotate(0, 0, 1, down.angle() + 90);
         // Draw character at center
-        renderer.ellipse(- C.FIGHTER_HEIGHT / 4, - C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT);
+        if (isFlying()) {
+            float tempRotation = cursorPos.angle() - 90;
+            renderer.rotate(0, 0, 1, tempRotation);
 
-        renderer.setColor(.7f, .5f, .5f, 1f);
-        renderer.arc(0f, - C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2.5f, 0f, 180f, 10);
+            renderer.setColor(.7f, .5f, .5f, 1f);
+            renderer.arc(0f, -.8f, C.FIGHTER_HEIGHT / 1.6f, 15f, 150f, 10);
 
+            renderer.setColor(.8f, .8f, .9f, 1f);
+            renderer.ellipse(-C.FIGHTER_HEIGHT / 4, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT);
 
-        renderer.rotate(0, 0, -1, down.angle()+90);
+            renderer.setColor(.7f, .5f, .5f, 1f);
+            renderer.arc(0f, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2.5f, 0f, 180f, 10);
+
+            renderer.rotate(0, 0, -1, tempRotation);
+        } else {
+            renderer.rotate(0, 0, 1, down.angle() + 90);
+
+            renderer.setColor(.8f, .8f, .9f, 1f);
+            renderer.ellipse(-C.FIGHTER_HEIGHT / 4, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT);
+
+            renderer.setColor(.7f, .5f, .5f, 1f);
+            renderer.arc(0f, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2.5f, 0f, 180f, 10);
+
+            renderer.rotate(0, 0, -1, down.angle() + 90);
+        }
         renderer.translate(-pos.x, -pos.y, 0f);
         renderer.end();
     }

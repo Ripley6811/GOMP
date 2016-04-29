@@ -6,7 +6,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -32,6 +34,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private ExtendViewport viewport;
     private OrthographicCamera camera;
     private ShapeRenderer renderer;
+    private SpriteBatch batch;
     private RayHandler rayHandler;
 
     private World world;
@@ -46,6 +49,8 @@ public class GameScreen extends InputAdapter implements Screen {
     private float rotation;
     private boolean onePlayer;
     private PointLight playerLOS;
+
+    private Vector2 cursorPos;
 
     public GameScreen(MainGomp game) {
         Gdx.input.setCatchBackKey(true);
@@ -63,15 +68,15 @@ public class GameScreen extends InputAdapter implements Screen {
         renderer = new ShapeRenderer();
         renderer.setAutoShapeType(true);
         renderer.setProjectionMatrix(camera.combined);
+        batch = new SpriteBatch();
+        batch.setProjectionMatrix(camera.combined);
 
         // TODO: Replace this with values based on level
         starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
+        cursorPos = new Vector2();
 
-        /** ADD LIGHTING */
+        /** Player view (LOS = line of sight) */
         rayHandler = new RayHandler(world);
-        // Base planet view
-        new PointLight(rayHandler, 500, Color.BLACK, 500, 0, 0);
-        // Player view (LOS = line of sight)
         playerLOS = new PointLight(rayHandler, 500, Color.BLACK, 500, 0, 0);
         PointLight.setGlobalContactFilter(C.CAT_LIGHT, (short) 0, C.CAT_STATIC);
     }
@@ -84,6 +89,15 @@ public class GameScreen extends InputAdapter implements Screen {
 
         // Init level planetoids
         planetoids = new Planetoids(world, level);
+
+        /** ADD LIGHTING */
+        // Base planet view
+        Circle circle = planetoids.getCircle(0);
+        Vector2 offset = new Vector2(0,circle.radius*1.1f);
+        for (int i=0; i<360; i+=20) {
+            offset.setAngle(i);
+            new PointLight(rayHandler, 500, Color.BLACK, 500, circle.x + offset.x, circle.y + offset.y);
+        }
 
         // Init player and opponent
         JsonValue p1Base = C.LEVEL_MAPS.get(level).get(0);
@@ -118,26 +132,27 @@ public class GameScreen extends InputAdapter implements Screen {
     }
 
     public void queryWeaponsInput(float delta) {
-        Vector2 pt = viewport.unproject(
-                new Vector2(Gdx.input.getX(), Gdx.input.getY())
-        );
 
         if (IM.isFiringPrimary() && player.laserReady()) {
             Vector2 playerPos = player.body.getPosition();
-            Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.LASER_START_OFFSET);
+            Vector2 heading = new Vector2(cursorPos).sub(playerPos).setLength(C.LASER_START_OFFSET);
             bullets.addLaser(playerPos.add(heading), heading);
         }
 
         if (IM.isFiringSecondary() && player.grenadeReady()) {
             Vector2 playerPos = player.body.getPosition();
             Vector2 playerVel = player.body.getLinearVelocity();
-            Vector2 heading = new Vector2(pt).sub(playerPos).setLength(C.LASER_START_OFFSET);
+            Vector2 heading = new Vector2(cursorPos).sub(playerPos).setLength(C.LASER_START_OFFSET);
             bullets.addGrenade(playerPos.add(heading), playerVel, heading);
         }
     }
 
     @Override
     public void render(float delta) {
+        cursorPos.set(viewport.unproject(
+                new Vector2(Gdx.input.getX(), Gdx.input.getY())
+        ));
+
         bullets.applyGravity(planetoids);
         player.applyGravity(planetoids);
         player.applyLandFriction(planetoids);
@@ -168,6 +183,7 @@ public class GameScreen extends InputAdapter implements Screen {
         }
         camera.update();
         renderer.setProjectionMatrix(camera.combined);
+        batch.setProjectionMatrix(camera.combined);
         rayHandler.setCombinedMatrix(camera);
 
         playerLOS.setPosition(player.body.getPosition());
@@ -178,11 +194,14 @@ public class GameScreen extends InputAdapter implements Screen {
 
 //        debugRenderer.render(world, camera.combined);
 
-        starField.render(renderer, player.body.getPosition());
-        bandit.render(delta, renderer);
-        planetoids.render(renderer);
+//        long startTime = System.nanoTime();
+        starField.render(batch, player.body.getPosition());
+//        long endTime = System.nanoTime();
+//        Gdx.app.debug(TAG, "star render time: " + ((endTime - startTime)/1000000f));
+        bandit.render(delta, renderer, new Vector2());
+        planetoids.render(batch);
         bullets.render(renderer);
-        player.render(delta, renderer);
+        player.render(delta, renderer, cursorPos);
         rayHandler.updateAndRender();
         // TODO: Draw sunny side of planetoids
 
@@ -196,15 +215,10 @@ public class GameScreen extends InputAdapter implements Screen {
      * @return Degrees to reach target
      */
     public static float shortestRotation(float originDeg, float targetDeg) {
-        // Ensure degrees are between 0 and 360.
-        while (originDeg < 0) originDeg += 360f;
-        while (targetDeg < 0) targetDeg += 360f;
-        originDeg %= 360f;
-        targetDeg %= 360f;
         // Calculate shortest rotation
         float rotateDeg = targetDeg - originDeg;
-        if (rotateDeg > 180) rotateDeg -= 360f;
-        else if (rotateDeg < -180) rotateDeg += 360f;
+        while (rotateDeg < -180) rotateDeg += 360f;
+        while (rotateDeg >= 180) rotateDeg -= 360f;
         return rotateDeg;
     }
 
@@ -269,7 +283,7 @@ public class GameScreen extends InputAdapter implements Screen {
                     bullet.hasCollided = true;
                 }
                 if (bullet.type == "GRENADE") {
-                    if (contact.getFixtureA().getBody().getUserData() instanceof Planetoids.PlanetoidData) {
+                    if (contact.getFixtureA().getBody().getUserData() instanceof Circle) {
 
                     } else {
                         bullet.hasCollided = true;
@@ -283,7 +297,6 @@ public class GameScreen extends InputAdapter implements Screen {
                 }
                 if (contact.getFixtureB().getBody() == bandit.body) {
                     Gdx.app.debug(TAG, "Contact Fixture B is Bandit");
-
                 }
             }
         }

@@ -32,12 +32,13 @@ public class C {
     public static final short CAT_STATIC = 0x0010;
     public static final int GROUP_PLAYER = -1;
     public static final int GROUP_BANDIT = -2;
-    public static final int NUMBER_OF_STARS = 1000;
+    public static final int NUMBER_OF_STARS = 20000;
     public static final float STAR_RADIUS = 0.2f;
     public static final Color STAR_COLOR = new Color(.4f,.4f,.4f,1f);
     public static final float STAR_PARALLAX_SCALE = 0.7f;  // 1f = fixed to player
     public static final Vector2 STARFIELD_CENTER = new Vector2(50, 0);
     public static final Vector2 STARFIELD_STD = new Vector2(80, 16);
+    public static final float SURFACE_SLOW_DOWN = 0.84f;
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
