@@ -3,6 +3,7 @@ package com.mygdx.gomp;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.mygdx.gomp.Constants.C;
 
 public class MainGomp extends Game {
@@ -18,7 +19,7 @@ public class MainGomp extends Game {
 	public void create () {
         Gdx.app.setLogLevel(C.LOG_LEVEL);
         assets = new AssetManager();
-//        assets.load(Constants.MAIN_ATLAS, TextureAtlas.class);
+        assets.load(C.MAIN_ATLAS, TextureAtlas.class);
         assets.finishLoading();
 
         onePlayer = true;

@@ -20,6 +20,7 @@ public class C {
 //    public static final int LOG_LEVEL = Application.LOG_DEBUG;
 
     /** WORLD CONSTANTS */
+    public static final String MAIN_ATLAS = "images/gomp.pack.atlas";
     // Rotation speed cap when on or close to surface.
     public static final float ROTATE_SPEED_CAP = 6f;
     // Rotation speed slowed when free-falling between surfaces.
@@ -40,6 +41,7 @@ public class C {
     public static final Vector2 STARFIELD_CENTER = new Vector2(50, 0);
     public static final Vector2 STARFIELD_STD = new Vector2(80, 16);
     public static final float SURFACE_SLOW_DOWN = 0.84f;
+    public static final float PAV_WALK_FRAME_RATE = 0.04f;
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
@@ -50,8 +52,8 @@ public class C {
             new JsonReader().parse(Gdx.files.internal("json/levels.json")).get("levels");
 
     /** FIGHTERS */
-    public static final float FIGHTER_HEIGHT = 3f;  // Meters (Box2D)
-    public static final float FIGHTER_MASS = 2000f;  // kg
+    public static final float FIGHTER_HEIGHT = 4f;  // Meters (Box2D)
+    public static final float FIGHTER_MASS = 1200f;  // kg
     public static final float FIGHTER_WALK_SPEED = 3000f;  // kg
     public static final float FIGHTER_JUMP_SPEED = 50000f;  // kg
     public static final float LASER_SPEED = 50000f;

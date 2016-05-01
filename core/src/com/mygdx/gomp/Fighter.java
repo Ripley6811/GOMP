@@ -1,5 +1,9 @@
 package com.mygdx.gomp;
 
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -19,22 +23,33 @@ public class Fighter {
     private boolean grounded;
     private boolean jumping;
     private boolean faceRight;
+    private float timeWalking;
     private float laserCooldown = 0f;
     private float grenadeCooldown = 0f;
     public Body body;  // Maintains world position
     public Vector2 down;
     public Vector2 cursorPos;
 
-    public Fighter(World world, float x, float y) {
-        this(world, x, y, true);
+    // Textures
+    private final Animation pav_walk;
+    private final Animation pav_trans;  // Jump is first frame, jet is last
+    private final TextureRegion pav_gun;
+    private final TextureRegion pav_fly;
+    private final TextureRegion pav_rwing;
+    private final TextureRegion pav_lwing;
+
+
+    public Fighter(World world, TextureAtlas atlas, float x, float y) {
+        this(world, atlas, x, y, true);
     }
-    public Fighter(World world, float x, float y, boolean isPlayer) {
+    public Fighter(World world, TextureAtlas atlas, float x, float y, boolean isPlayer) {
         flyMode = false;
         grounded = true;
         jumping = false;
         faceRight = true;
         down = new Vector2();
         cursorPos = new Vector2();
+        timeWalking = 0f;
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -60,6 +75,17 @@ public class Fighter {
         body.createFixture(fixtureDef);
 
         circle.dispose();
+
+        // Set textures
+        pav_walk = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_WALK"),
+                Animation.PlayMode.LOOP);
+        pav_trans = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_TRANS"),
+                Animation.PlayMode.NORMAL);
+        pav_gun = atlas.createSprite("PAVsm_GUN");
+        pav_fly = atlas.createSprite("PAVsm_FLY");
+        pav_rwing = atlas.createSprite("PAVsm_WING_RIGHT");
+        pav_lwing = atlas.createSprite("PAVsm_WING_RIGHT");
+        pav_lwing.flip(true, false);
     }
 
     public boolean laserReady() {
@@ -105,9 +131,10 @@ public class Fighter {
     }
 
 
-    public void queryPlayerMovementInput() {
+    public void queryPlayerMovementInput(float delta) {
         if (IM.isPressingLeft()) {
             faceRight = false;
+            timeWalking += delta;
             if (!flyMode && grounded) {
                 Vector2 vLeft = new Vector2(this.down).rotate90(-1).setLength(C.FIGHTER_WALK_SPEED);
                 this.body.applyForceToCenter(vLeft, true);
@@ -116,9 +143,9 @@ public class Fighter {
                 Vector2 vLeft = new Vector2(this.cursorPos).rotate90(1).setLength(20);
                 this.body.applyLinearImpulse(vLeft, body.getPosition(), true);
             }
-        }
-        if (IM.isPressingRight()) {
+        } else if (IM.isPressingRight()) {
             faceRight = true;
+            timeWalking += delta;
             if (!flyMode && grounded) {
                 Vector2 vRight = new Vector2(this.down).rotate90(1).setLength(C.FIGHTER_WALK_SPEED);
                 this.body.applyForceToCenter(vRight, true);
@@ -127,6 +154,8 @@ public class Fighter {
                 Vector2 vRight = new Vector2(this.cursorPos).rotate90(-1).setLength(20);
                 this.body.applyLinearImpulse(vRight, body.getPosition(), true);
             }
+        } else {
+            timeWalking = 0f;
         }
         if (!flyMode && IM.justPressedUp()) {
             if (grounded) {
@@ -145,41 +174,91 @@ public class Fighter {
         }
     }
 
-    public void render(float delta, ShapeRenderer renderer, Vector2 cursorPos) {
+    public void render(float delta, SpriteBatch batch, Vector2 cursorPos) {
         Vector2 pos = body.getPosition();
         this.cursorPos.set(cursorPos.sub(pos));
         laserCooldown -= delta;
         grenadeCooldown -= delta;
+        float tempRotation = cursorPos.angle() - 90;
+        int pWidth = pav_gun.getRegionWidth();
+        int pHalfWidth = pWidth/2;
 
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.translate(pos.x, pos.y, 0f);
+        batch.begin();
         // Draw character at center
-        if (isFlying()) {
-            float tempRotation = cursorPos.angle() - 90;
-            renderer.rotate(0, 0, 1, tempRotation);
-
-            renderer.setColor(.7f, .5f, .5f, 1f);
-            renderer.arc(0f, -.8f, C.FIGHTER_HEIGHT / 1.6f, 15f, 150f, 10);
-
-            renderer.setColor(.8f, .8f, .9f, 1f);
-            renderer.ellipse(-C.FIGHTER_HEIGHT / 4, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT);
-
-            renderer.setColor(.7f, .5f, .5f, 1f);
-            renderer.arc(0f, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2.5f, 0f, 180f, 10);
-
-            renderer.rotate(0, 0, -1, tempRotation);
-        } else {
-            renderer.rotate(0, 0, 1, down.angle() + 90);
-
-            renderer.setColor(.8f, .8f, .9f, 1f);
-            renderer.ellipse(-C.FIGHTER_HEIGHT / 4, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT);
-
-            renderer.setColor(.7f, .5f, .5f, 1f);
-            renderer.arc(0f, -C.FIGHTER_HEIGHT / 2, C.FIGHTER_HEIGHT / 2.5f, 0f, 180f, 10);
-
-            renderer.rotate(0, 0, -1, down.angle() + 90);
+        if (!isFlying()) {
+            if (faceRight) {
+                batch.draw(pav_lwing,
+                        pos.x - pHalfWidth,
+                        pos.y - pHalfWidth,
+                        pHalfWidth, pHalfWidth,
+                        pWidth, pWidth,
+                        .08f, .08f,  // Scale
+                        down.angle() + 40);
+                batch.draw(pav_lwing,
+                        pos.x - pHalfWidth,
+                        pos.y - pHalfWidth,
+                        pHalfWidth, pHalfWidth,
+                        pWidth, pWidth,
+                        .08f, .08f,  // Scale
+                        down.angle() + 50);
+            } else {
+                batch.draw(pav_rwing,
+                        pos.x - pHalfWidth,
+                        pos.y - pHalfWidth,
+                        pHalfWidth, pHalfWidth,
+                        pWidth, pWidth,
+                        .08f, .08f,  // Scale
+                        down.angle() + 130);
+                batch.draw(pav_rwing,
+                        pos.x - pHalfWidth,
+                        pos.y - pHalfWidth,
+                        pHalfWidth, pHalfWidth,
+                        pWidth, pWidth,
+                        .08f, .08f,  // Scale
+                        down.angle() + 140);
+            }
         }
-        renderer.translate(-pos.x, -pos.y, 0f);
-        renderer.end();
+        if (isGrounded()) {
+            TextureRegion texture = pav_walk.getKeyFrame(timeWalking);
+            if (!faceRight && !texture.isFlipX()) texture.flip(true, false);
+            if (faceRight && texture.isFlipX()) texture.flip(true, false);
+            batch.draw(texture,
+                    pos.x - pHalfWidth,
+                    pos.y - pHalfWidth,
+                    pHalfWidth, pHalfWidth,
+                    pWidth, pWidth,
+                    .08f, .08f,  // Scale
+                    down.angle() + 90);
+
+
+        } else if (isFlying()) {
+            batch.draw(pav_fly,
+                    pos.x - pHalfWidth,
+                    pos.y - pHalfWidth,
+                    pHalfWidth, pHalfWidth,
+                    pWidth, pWidth,
+                    .08f, .08f,  // Scale
+                    tempRotation);
+        } else { // JUMPING
+            TextureRegion texture = pav_trans.getKeyFrame(0f);
+            if (!faceRight && !texture.isFlipX()) texture.flip(true, false);
+            if (faceRight && texture.isFlipX()) texture.flip(true, false);
+            batch.draw(texture,
+                    pos.x - pHalfWidth,
+                    pos.y - pHalfWidth,
+                    pHalfWidth, pHalfWidth,
+                    pWidth, pWidth,
+                    .08f, .08f,  // Scale
+                    down.angle() + 90);
+        }
+        // DRAW GUN IN ALL CASES
+        batch.draw(pav_gun,
+                pos.x - pHalfWidth,
+                pos.y - pHalfWidth,
+                pHalfWidth, pHalfWidth,
+                pWidth, pWidth,
+                .08f, .08f,  // Scale
+                tempRotation);
+        batch.end();
     }
 }

@@ -1,3 +1,6 @@
+// Added manually
+import com.badlogic.gdx.tools.texturepacker.TexturePacker
+
 buildscript {
     repositories {
         mavenCentral()
@@ -7,6 +10,8 @@ buildscript {
     dependencies {
         classpath 'de.richsource.gradle.plugins:gwt-gradle-plugin:0.6'
         classpath 'com.android.tools.build:gradle:1.5.0'
+        // Added manually
+        classpath 'com.badlogicgames.gdx:gdx-tools:1.7.0'
     }
 }
 
@@ -91,6 +96,18 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"
     }
+
+    // Added manually
+    task packTextures << {
+        def pack = new File("android/assets/images/gomp.pack.png")
+        pack.delete()
+        def atlas = new File("android/assets/images/gomp.pack.atlas")
+        atlas.delete()
+        TexturePacker.process("core/rawAssets/sprites", "android/assets/images", "gomp.pack")
+    }
+
+    // Added manually
+    project.tasks.compileJava.dependsOn packTextures
 }
 
 tasks.eclipse.doLast {

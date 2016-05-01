@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
@@ -41,6 +42,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private World world;
     private Box2DDebugRenderer debugRenderer;
 
+    private TextureAtlas atlas;
     private StarField starField;
     private Planetoids planetoids;
     private Fighter player;
@@ -58,6 +60,7 @@ public class GameScreen extends InputAdapter implements Screen {
         this.game = game;
         this.level = game.level;
         this.onePlayer = game.onePlayer;
+        this.atlas = game.assets.get(C.MAIN_ATLAS);
 
         world = new World(new Vector2(0, 0), true);
 
@@ -110,11 +113,11 @@ public class GameScreen extends InputAdapter implements Screen {
         // Init player and opponent
         JsonValue p1Base = C.LEVEL_MAPS.get(level).get(0);
         JsonValue p2Base = C.LEVEL_MAPS.get(level).get(1);
-        player = new Fighter(world,
+        player = new Fighter(world, atlas,
                 p1Base.getFloat("x"),
                 p1Base.getFloat("y") + p1Base.getFloat("radius")
         );
-        bandit = new Fighter(world,
+        bandit = new Fighter(world, atlas,
                 p2Base.getFloat("x"),
                 p2Base.getFloat("y") - p2Base.getFloat("radius"),
                 false
@@ -168,7 +171,7 @@ public class GameScreen extends InputAdapter implements Screen {
             bandit.applyGravity(planetoids);
             bandit.applyLandFriction(planetoids);
         }
-        player.queryPlayerMovementInput();
+        player.queryPlayerMovementInput(delta);
 
         queryWeaponsInput(delta);
 
@@ -208,8 +211,8 @@ public class GameScreen extends InputAdapter implements Screen {
 //        Gdx.app.debug(TAG, "star render time: " + ((endTime - startTime)/1000000f));
         planetoids.render(batch);
         bullets.render(renderer);
-        bandit.render(delta, renderer, new Vector2());
-        player.render(delta, renderer, cursorPos);
+        bandit.render(delta, batch, new Vector2());
+        player.render(delta, batch, cursorPos);
         rayHandler.updateAndRender();
         // TODO: Draw sunny side of planetoids
 
