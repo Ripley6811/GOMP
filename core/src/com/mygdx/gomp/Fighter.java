@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -182,6 +183,7 @@ public class Fighter {
         float tempRotation = cursorPos.angle() - 90;
         int pWidth = pav_gun.getRegionWidth();
         int pHalfWidth = pWidth/2;
+        float wingWaddle = 6*MathUtils.sinDeg(1600*timeWalking);
 
         batch.begin();
         // Draw character at center
@@ -193,14 +195,14 @@ public class Fighter {
                         pHalfWidth, pHalfWidth,
                         pWidth, pWidth,
                         .08f, .08f,  // Scale
-                        down.angle() + 40);
+                        down.angle() + 40 + wingWaddle);
                 batch.draw(pav_lwing,
                         pos.x - pHalfWidth,
                         pos.y - pHalfWidth,
                         pHalfWidth, pHalfWidth,
                         pWidth, pWidth,
                         .08f, .08f,  // Scale
-                        down.angle() + 50);
+                        down.angle() + 50 + wingWaddle);
             } else {
                 batch.draw(pav_rwing,
                         pos.x - pHalfWidth,
@@ -208,14 +210,14 @@ public class Fighter {
                         pHalfWidth, pHalfWidth,
                         pWidth, pWidth,
                         .08f, .08f,  // Scale
-                        down.angle() + 130);
+                        down.angle() + 130 + wingWaddle);
                 batch.draw(pav_rwing,
                         pos.x - pHalfWidth,
                         pos.y - pHalfWidth,
                         pHalfWidth, pHalfWidth,
                         pWidth, pWidth,
                         .08f, .08f,  // Scale
-                        down.angle() + 140);
+                        down.angle() + 140 + wingWaddle);
             }
         }
         if (isGrounded()) {

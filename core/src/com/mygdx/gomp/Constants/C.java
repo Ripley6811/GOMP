@@ -41,7 +41,7 @@ public class C {
     public static final Vector2 STARFIELD_CENTER = new Vector2(50, 0);
     public static final Vector2 STARFIELD_STD = new Vector2(80, 16);
     public static final float SURFACE_SLOW_DOWN = 0.84f;
-    public static final float PAV_WALK_FRAME_RATE = 0.04f;
+    public static final float PAV_WALK_FRAME_RATE = 0.05f;
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
