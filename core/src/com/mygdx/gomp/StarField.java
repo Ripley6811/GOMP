@@ -59,18 +59,18 @@ public class StarField {
         }
     }
 
-//    public void render(ShapeRenderer renderer, Vector2 offset) {
-//        renderer.begin(ShapeRenderer.ShapeType.Filled);
-//        renderer.setColor(C.STAR_COLOR);
-//        for (Vector2 star: stars) {
-//            renderer.circle(
-//                    star.x + offset.x * C.STAR_PARALLAX_SCALE,
-//                    star.y + offset.y * C.STAR_PARALLAX_SCALE,
-//                    C.STAR_RADIUS
-//            );
-//        }
-//        renderer.end();
-//    }
+    public void render(ShapeRenderer renderer, Vector2 offset) {
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        renderer.setColor(C.STAR_COLOR);
+        for (Vector2 star: stars) {
+            renderer.circle(
+                    star.x + offset.x * C.STAR_PARALLAX_SCALE,
+                    star.y + offset.y * C.STAR_PARALLAX_SCALE,
+                    C.STAR_RADIUS
+            );
+        }
+        renderer.end();
+    }
 
     public void render(SpriteBatch batch, Vector2 offset) {
         batch.begin();

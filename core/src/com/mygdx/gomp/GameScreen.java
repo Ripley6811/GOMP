@@ -1,5 +1,6 @@
 package com.mygdx.gomp;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
@@ -91,12 +92,19 @@ public class GameScreen extends InputAdapter implements Screen {
         planetoids = new Planetoids(world, level);
 
         /** ADD LIGHTING */
+        // NOTE: Many lights slows down HTML/WebGL version
         // Base planet view
         Circle circle = planetoids.getCircle(0);
-        Vector2 offset = new Vector2(0,circle.radius*1.1f);
-        for (int i=0; i<360; i+=20) {
-            offset.setAngle(i);
-            new PointLight(rayHandler, 500, Color.BLACK, 500, circle.x + offset.x, circle.y + offset.y);
+        if (Gdx.app.getType() == Application.ApplicationType.WebGL) {
+            // Single light in base planet for HTML version
+            Vector2 offset = new Vector2(0, 0);
+            new PointLight(rayHandler, 250, Color.BLACK, 400, circle.x + offset.x, circle.y + offset.y);
+        } else {
+            Vector2 offset = new Vector2(0, circle.radius * 1.1f);
+            for (int i = 0; i < 360; i += 30) {
+                offset.setAngle(i);
+                new PointLight(rayHandler, 240, Color.BLACK, 400, circle.x + offset.x, circle.y + offset.y);
+            }
         }
 
         // Init player and opponent
@@ -195,12 +203,12 @@ public class GameScreen extends InputAdapter implements Screen {
 //        debugRenderer.render(world, camera.combined);
 
 //        long startTime = System.nanoTime();
-        starField.render(batch, player.body.getPosition());
+        starField.render(batch, player.body.getPosition());  // Desktop faster
 //        long endTime = System.nanoTime();
 //        Gdx.app.debug(TAG, "star render time: " + ((endTime - startTime)/1000000f));
-        bandit.render(delta, renderer, new Vector2());
         planetoids.render(batch);
         bullets.render(renderer);
+        bandit.render(delta, renderer, new Vector2());
         player.render(delta, renderer, cursorPos);
         rayHandler.updateAndRender();
         // TODO: Draw sunny side of planetoids

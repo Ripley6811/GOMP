@@ -1,6 +1,5 @@
 package com.mygdx.gomp;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -107,7 +106,7 @@ public class Fighter {
 
 
     public void queryPlayerMovementInput() {
-        if (Gdx.input.isKeyPressed(C.MOVE_LEFT)) {
+        if (IM.isPressingLeft()) {
             faceRight = false;
             if (!flyMode && grounded) {
                 Vector2 vLeft = new Vector2(this.down).rotate90(-1).setLength(C.FIGHTER_WALK_SPEED);
@@ -118,7 +117,7 @@ public class Fighter {
                 this.body.applyLinearImpulse(vLeft, body.getPosition(), true);
             }
         }
-        if (Gdx.input.isKeyPressed(C.MOVE_RIGHT)) {
+        if (IM.isPressingRight()) {
             faceRight = true;
             if (!flyMode && grounded) {
                 Vector2 vRight = new Vector2(this.down).rotate90(1).setLength(C.FIGHTER_WALK_SPEED);
@@ -129,7 +128,7 @@ public class Fighter {
                 this.body.applyLinearImpulse(vRight, body.getPosition(), true);
             }
         }
-        if (!flyMode && Gdx.input.isKeyJustPressed(C.MOVE_JUMP)) {
+        if (!flyMode && IM.justPressedUp()) {
             if (grounded) {
                 Vector2 vUp = new Vector2(this.down).rotate(180).setLength(C.FIGHTER_JUMP_SPEED);
                 this.body.applyForceToCenter(vUp, true);
@@ -140,7 +139,7 @@ public class Fighter {
         if (flyMode && IM.isTransforming() && !grounded) {
             flyMode = false;
         }
-        if (flyMode && Gdx.input.isKeyPressed(C.MOVE_JUMP)) {
+        if (flyMode && IM.isPressingUp()) {
             Vector2 flyVector = new Vector2(this.cursorPos).setLength(20);
             this.body.applyLinearImpulse(flyVector, body.getPosition(), true);
         }

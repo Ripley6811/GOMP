@@ -23,7 +23,7 @@ import com.mygdx.gomp.Constants.C;
 public class Planetoids {
     private static final String TAG = Planetoids.class.getName();
 
-    Array<Body> planetoidBodies;
+    private Array<Body> planetoidBodies;
     private Texture planetImage = new Texture(Gdx.files.internal("planet2.png"));
 
     /**
@@ -81,7 +81,7 @@ public class Planetoids {
             float dist2 = toPlanet.len2() * C.INTERPLANETOID_DISTANCE_MULTIPLIER;
 //            Gdx.app.log(TAG, "dist2: " + dist2);
 //            Gdx.app.log(TAG, "mass: " + ((UserData) planetoid.getUserData()).mass);
-            float force = C.GRAVITY * C.PLANETOID_DENSITY * ((Circle) planetoid.getUserData()).area() * mass / dist2;
+            float force = C.GRAVITY * mass(planetoid) * mass / dist2;
 
 //            Gdx.app.log(TAG, "force: " + force);
             toPlanet.setLength(force);
@@ -116,56 +116,21 @@ public class Planetoids {
     }
 
     /**
-     * Data object for planetoid Body instance using the
-     * setUserData method.
+     * Uses "area" for mass reduced the weight difference between different size bodies.
+     * @param planetoid Body object representing planetoid
+     * @return Area times planetoid density
      */
-    public class PlanetoidData {
-        public String type;
-        public float radius;
-        public float mass;
-
-        public PlanetoidData(float radius) {
-            this.type = "PLANETOID";
-            this.radius = radius;
-            this.mass = calculateMass(radius);
-        }
-    }
-
-    private float calculateMass(float radius) {
-        // Volume based
-//        float volume = C.PI_4_3RDS * radius * radius * radius;
-        // Area based
-        float volume = C.PI * radius * radius;
-        return C.PLANETOID_DENSITY * volume;
+    private float mass(Body planetoid) {
+        return C.PLANETOID_DENSITY * ((Circle) planetoid.getUserData()).area();
     }
 
     public Circle getCircle(int bodyIndex) {
         if (bodyIndex >= planetoidBodies.size) return null;
 
-//        Body body = planetoidBodies.get(bodyIndex);
         return (Circle) planetoidBodies.get(bodyIndex).getUserData();
     }
 
-    public void render(ShapeRenderer renderer) {
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(.5f, .3f, .4f, 1f);
-        for (Body rock: planetoidBodies) {
-            Vector2 pos = rock.getPosition();
-            renderer.circle(pos.x, pos.y, ((PlanetoidData) rock.getUserData()).radius, 40);
-        }
-        renderer.end();
-    }
-
     public void render(SpriteBatch batch) {
-//        renderer.begin(ShapeRenderer.ShapeType.Filled);
-//        renderer.setColor(.5f, .3f, .4f, 1f);
-//        for (Body rock: planetoidBodies) {
-//            Vector2 pos = rock.getPosition();
-//            renderer.circle(pos.x, pos.y, ((PlanetoidData) rock.getUserData()).radius, 40);
-//        }
-//        renderer.end();
-
-
         batch.begin();
         for (Body rock: planetoidBodies) {
             Circle circle = (Circle)rock.getUserData();
