@@ -39,7 +39,7 @@ public class C {
     public static final Color STAR_COLOR = new Color(.4f,.4f,.4f,1f);
     public static final float STAR_PARALLAX_SCALE = 0.7f;  // 1f = fixed to player
     public static final Vector2 STARFIELD_CENTER = new Vector2(50, 0);
-    public static final Vector2 STARFIELD_STD = new Vector2(80, 16);
+    public static final Vector2 STARFIELD_STD = new Vector2(80, 32);
     public static final float SURFACE_SLOW_DOWN = 0.84f;
     public static final float PAV_WALK_FRAME_RATE = 0.05f;
 
