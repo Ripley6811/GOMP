@@ -2,6 +2,7 @@ package com.mygdx.gomp;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -131,15 +132,12 @@ public class GameScreen extends InputAdapter implements Screen {
     }
 
     @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+    public boolean keyTyped(char character) {
+        if (character == '+') camera.zoom -= 0.05f;
 
-        return super.touchDown(screenX, screenY, pointer, button);
-    }
+        if (character == '-') camera.zoom += 0.05f;
 
-    @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-
-        return super.touchUp(screenX, screenY, pointer, button);
+        return super.keyTyped(character);
     }
 
     public void queryWeaponsInput(float delta) {
