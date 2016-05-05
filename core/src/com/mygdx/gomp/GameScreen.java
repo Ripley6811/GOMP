@@ -2,7 +2,6 @@ package com.mygdx.gomp;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
@@ -19,10 +18,14 @@ import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.gomp.Constants.C;
+import com.mygdx.gomp.DynamicAssets.Bullets;
+import com.mygdx.gomp.DynamicAssets.Fighter;
 import com.mygdx.gomp.InputMapper.IM;
+import com.mygdx.gomp.StaticAssets.Planetoid;
+import com.mygdx.gomp.StaticAssets.Planetoids;
+import com.mygdx.gomp.StaticAssets.StarField;
 
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -37,6 +40,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private ExtendViewport viewport;
     private OrthographicCamera camera;
     private ShapeRenderer renderer;
+    private ShapeRenderer hudRenderer;
     private SpriteBatch batch;
     private RayHandler rayHandler;
 
@@ -75,6 +79,8 @@ public class GameScreen extends InputAdapter implements Screen {
         renderer.setProjectionMatrix(camera.combined);
         batch = new SpriteBatch();
         batch.setProjectionMatrix(camera.combined);
+        hudRenderer = new ShapeRenderer();
+        hudRenderer.setAutoShapeType(true);
 
         // TODO: Replace this with values based on level
         starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
@@ -92,8 +98,25 @@ public class GameScreen extends InputAdapter implements Screen {
         Gdx.input.setInputProcessor(this);
         world.setContactListener(new ListenerClass());
 
+        /**
+         * IMPORTANT: Do not change order that objects are added to world.
+         * Contact resolution expects the following order:
+         *      Planetoids (surfaces)
+         *      Characters (vehicles)
+         *      Bullets last
+         */
         // Init level planetoids
         planetoids = new Planetoids(world, level);
+
+        // Init player and opponent
+        player = new Fighter(world, atlas, planetoids.get(0));
+        bandit = new Fighter(world, atlas, planetoids.get(1), false);
+
+        // Init bullet manager
+        bullets = new Bullets(world, rayHandler);
+
+        // Create reference to current rotation
+        rotation = 0f;
 
         /** ADD LIGHTING */
         // NOTE: Many lights slows down HTML/WebGL version
@@ -110,25 +133,6 @@ public class GameScreen extends InputAdapter implements Screen {
                 new PointLight(rayHandler, 240, Color.BLACK, 400, circle.x + offset.x, circle.y + offset.y);
             }
         }
-
-        // Init player and opponent
-        JsonValue p1Base = C.LEVEL_MAPS.get(level).get(0);
-        JsonValue p2Base = C.LEVEL_MAPS.get(level).get(1);
-        player = new Fighter(world, atlas,
-                p1Base.getFloat("x"),
-                p1Base.getFloat("y") + p1Base.getFloat("radius")
-        );
-        bandit = new Fighter(world, atlas,
-                p2Base.getFloat("x"),
-                p2Base.getFloat("y") - p2Base.getFloat("radius"),
-                false
-        );
-
-        // Init bullet manager
-        bullets = new Bullets(world, rayHandler);
-
-        // Create reference to current rotation
-        rotation = 0f;
     }
 
     @Override
@@ -212,6 +216,33 @@ public class GameScreen extends InputAdapter implements Screen {
         bandit.render(delta, batch, new Vector2());
         player.render(delta, batch, cursorPos);
         rayHandler.updateAndRender();
+
+
+        /** HUD */
+        hudRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        hudRenderer.setColor(Color.DARK_GRAY);
+        hudRenderer.box(100, 10, 0, C.FIGHTER_MAX_HEALTH * 2, 10, 0);
+        hudRenderer.setColor(Color.RED);
+        hudRenderer.box(100, 10, 0, player.getHealth() * 2, 10, 0);
+
+        hudRenderer.setColor(Color.DARK_GRAY);
+        hudRenderer.box(100, 25, 0, C.FIGHTER_MAX_ENERGY, 10, 0);
+        hudRenderer.setColor(Color.CYAN);
+        hudRenderer.box(100, 25, 0, player.getEnergy(), 10, 0);
+
+        hudRenderer.setColor(Color.DARK_GRAY);
+        hudRenderer.box(400, 10, 0, C.FIGHTER_MAX_HEALTH * 2, 10, 0);
+        hudRenderer.setColor(Color.RED);
+        hudRenderer.box(400, 10, 0, bandit.getHealth() * 2, 10, 0);
+
+        hudRenderer.setColor(Color.DARK_GRAY);
+        hudRenderer.box(400, 25, 0, C.FIGHTER_MAX_ENERGY, 10, 0);
+        hudRenderer.setColor(Color.CYAN);
+        hudRenderer.box(400, 25, 0, bandit.getEnergy(), 10, 0);
+        hudRenderer.end();
+
+
+
         // TODO: Draw sunny side of planetoids
 
         world.step(delta, 6, 2);
@@ -269,7 +300,17 @@ public class GameScreen extends InputAdapter implements Screen {
 
         @Override
         public void endContact(Contact contact) {
+            if (contact.getFixtureB().getUserData() instanceof Fighter) {
+                Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
+                if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+                    Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
 
+                    if (p == fighter.getBase()) {
+                        fighter.setRecharging(false);
+                        Gdx.app.debug(TAG, "Contact Fixture B is Fighter charging: " + fighter.isRecharging());
+                    }
+                }
+            }
         }
 
         @Override
@@ -277,26 +318,32 @@ public class GameScreen extends InputAdapter implements Screen {
             /**
              * Check from bullet/weapon perspective instead.
              * Resolve bullet/weapon collisions.
+             *
+             * TODO: Send event to respective class(es) for processing
              */
             if (contact.getFixtureA().getBody() == player.body) {
-                Gdx.app.debug(TAG, "Contact Fixture A is Player");
+                Gdx.app.debug(TAG, "Contact Fixture A is Player: " + contact.getFixtureA().toString() );
             }
-            if (contact.getFixtureB().getBody() == player.body) {
-                Gdx.app.debug(TAG, "Contact Fixture B is Player");
+            if (contact.getFixtureB().getUserData() instanceof Fighter) {
+                Gdx.app.debug(TAG, "Contact Fixture B is Fighter: " + contact.getFixtureB().toString() );
+                Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
+                if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+//                    Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
 
-            }
-            if (contact.getFixtureB().getBody().isBullet()) {
-                Bullet bullet = (Bullet) contact.getFixtureB().getUserData();
-                Gdx.app.debug(TAG, "Contact Fixture B is Bullet:" + bullet.type);
-                if (bullet.type == "LASER") {
-                    bullet.hasCollided = true;
-                }
-                if (bullet.type == "GRENADE") {
-                    if (contact.getFixtureA().getBody().getUserData() instanceof Circle) {
-
-                    } else {
-                        bullet.hasCollided = true;
+                    if (contact.getFixtureA().getUserData() == fighter.getBase()) {
+                        fighter.setRecharging(true);
+                        Gdx.app.debug(TAG, "Contact Fixture B is Fighter charging: " + fighter.isRecharging());
                     }
+                }
+            }
+            // Bullet should always be fixtureB. World object ordering.
+            if (contact.getFixtureB().getBody().isBullet()) {
+                int damage = bullets.resolveContact(contact);
+
+                Object fixtureRef = contact.getFixtureA().getUserData();
+                if (fixtureRef instanceof Fighter) {
+                    int remainder = ((Fighter) fixtureRef).takeDamage(damage);
+                    Gdx.app.log(TAG, "Fighter health: " + remainder);
                 }
             }
 

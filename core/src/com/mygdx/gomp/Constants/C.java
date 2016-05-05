@@ -26,7 +26,6 @@ public class C {
     // Rotation speed slowed when free-falling between surfaces.
     public static final float ROTATE_FREEFALL_CAP = ROTATE_SPEED_CAP/20f;
     public static final float PI = MathUtils.PI;
-    public static final float PI_4_3RDS = PI * 4f / 3f;
     public static final short CAT_LIGHT = 0x0001;
     public static final short CAT_PLAYER = 0x0002;
     public static final short CAT_BANDIT = 0x0004;
@@ -69,4 +68,8 @@ public class C {
     public static final float GRENADE_RADIUS = 0.3f;
     public static final float GRENADE_COOLDOWN = 0.4f;
     public static final float GRENADE_RANDOM = 1.5f;  // Degrees error
+    public static final int LASER_DAMAGE = 5;
+    public static final int GRENADE_DAMAGE = 25;
+    public static final int FIGHTER_MAX_HEALTH = 100;
+    public static final int FIGHTER_MAX_ENERGY = 200;
 }

@@ -1,16 +1,21 @@
-package com.mygdx.gomp;
+package com.mygdx.gomp.DynamicAssets;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.gomp.Constants.C;
+import com.mygdx.gomp.StaticAssets.Planetoid;
+import com.mygdx.gomp.StaticAssets.Planetoids;
 
 import box2dLight.PointLight;
 import box2dLight.RayHandler;
@@ -45,6 +50,8 @@ public class Bullets {
     public class LaserFire extends Bullet {
         public LaserFire(Vector2 position, Vector2 heading) {
             super("LASER");
+
+            this.damage = C.LASER_DAMAGE;
 
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -85,6 +92,8 @@ public class Bullets {
         public GrenadeFire(Vector2 position, Vector2 playerVelocity, Vector2 heading) {
             super("GRENADE");
 
+            this.damage = C.GRENADE_DAMAGE;
+
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyDef.BodyType.DynamicBody;
             bodyDef.bullet = true;
@@ -123,20 +132,40 @@ public class Bullets {
         }
     }
 
+    public int resolveContact(Contact contact) {
+
+        Bullet bullet = (Bullet) contact.getFixtureB().getUserData();
+        Gdx.app.debug(TAG, "Contact Fixture B is Bullet:" + bullet.getType());
+        if (bullet.getType() == "LASER") {
+            bullet.hasCollided(true);
+            return bullet.damage;
+        }
+        if (bullet.getType() == "GRENADE") {
+            // Bounce if collides with planet (a circle)
+            if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+
+            } else {
+                bullet.hasCollided(true);
+                return bullet.damage;
+            }
+        }
+        return 0;
+    }
+
     public void render(ShapeRenderer renderer) {
         // Remove dead bullets
         // TODO: Render explosion.
         for (int i=lasers.size-1; i >= 0; i--) {
             LaserFire bullet = lasers.get(i);
             bullet.updateLightPos();
-            if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.hasCollided = true;
-            if (bullet.hasCollided) lasers.removeIndex(i).destroy(world);
+            if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.collided = true;
+            if (bullet.collided) lasers.removeIndex(i).destroy(world);
         }
         for (int i=grenades.size-1; i >= 0; i--) {
             GrenadeFire bullet = grenades.get(i);
             bullet.updateLightPos();
-            if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.hasCollided = true;
-            if (bullet.hasCollided) grenades.removeIndex(i).destroy(world);
+            if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.collided = true;
+            if (bullet.collided) grenades.removeIndex(i).destroy(world);
         }
 
         // TODO: Render live bullets.

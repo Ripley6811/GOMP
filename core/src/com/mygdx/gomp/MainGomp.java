@@ -9,8 +9,8 @@ import com.mygdx.gomp.Constants.C;
 public class MainGomp extends Game {
 
     GameScreen gameScreen;
+    TitleScreen titleScreen;
     AssetManager assets;
-
 
     boolean onePlayer;
     int level;
@@ -25,8 +25,9 @@ public class MainGomp extends Game {
         onePlayer = true;
         level = 1;
 
+        titleScreen = new TitleScreen(this);
         gameScreen = new GameScreen(this);
-        setScreen(gameScreen);
+        setScreen(titleScreen);
 	}
 
 }

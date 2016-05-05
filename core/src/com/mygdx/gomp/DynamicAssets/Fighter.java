@@ -1,10 +1,10 @@
-package com.mygdx.gomp;
+package com.mygdx.gomp.DynamicAssets;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -14,6 +14,8 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.gomp.Constants.C;
 import com.mygdx.gomp.InputMapper.IM;
+import com.mygdx.gomp.StaticAssets.Planetoid;
+import com.mygdx.gomp.StaticAssets.Planetoids;
 
 /**
  * Created by Jay on 4/26/2016.
@@ -24,12 +26,17 @@ public class Fighter {
     private boolean grounded;
     private boolean jumping;
     private boolean faceRight;
+    private boolean recharging;
     private float timeWalking;
     private float laserCooldown = 0f;
     private float grenadeCooldown = 0f;
     public Body body;  // Maintains world position
     public Vector2 down;
     public Vector2 cursorPos;
+    private int health;
+    private int energy;
+    private Planetoid base;
+    private float energyBoost;
 
     // Textures
     private final Animation pav_walk;
@@ -40,21 +47,28 @@ public class Fighter {
     private final TextureRegion pav_lwing;
 
 
-    public Fighter(World world, TextureAtlas atlas, float x, float y) {
-        this(world, atlas, x, y, true);
+    public Fighter(World world, TextureAtlas atlas, Planetoid base) {
+        this(world, atlas, base, true);
     }
-    public Fighter(World world, TextureAtlas atlas, float x, float y, boolean isPlayer) {
+
+    public Fighter(World world, TextureAtlas atlas, Planetoid base, boolean isPlayer) {
         flyMode = false;
         grounded = true;
         jumping = false;
         faceRight = true;
+        recharging = false;
+        this.base = base;
         down = new Vector2();
         cursorPos = new Vector2();
         timeWalking = 0f;
+        health = C.FIGHTER_MAX_HEALTH;
+        energy = C.FIGHTER_MAX_ENERGY;
+        energyBoost = 0f;
 
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(new Vector2(x, y));
+        bodyDef.position.set(new Vector2(base.getCircle().x,
+                base.getCircle().y + base.getCircle().radius));
 
         body = world.createBody(bodyDef);
         CircleShape circle = new CircleShape();
@@ -73,7 +87,7 @@ public class Fighter {
             fixtureDef.filter.categoryBits = C.CAT_BANDIT;
         }
 
-        body.createFixture(fixtureDef);
+        body.createFixture(fixtureDef).setUserData(this);
 
         circle.dispose();
 
@@ -89,17 +103,62 @@ public class Fighter {
         pav_lwing.flip(true, false);
     }
 
+    public int takeDamage(int amount) {
+        health = Math.max(health - amount, 0);
+        return health;
+    }
+
+    public int addHealth(int amount) {
+        health = Math.min(health + amount, C.FIGHTER_MAX_HEALTH);
+        return health;
+    }
+
+    public int useEnergy(int amount) {
+        energy = Math.max(energy - amount, 0);
+        return energy;
+    }
+
+    public int addEnergy(int amount) {
+        energy = Math.min(energy + amount, C.FIGHTER_MAX_ENERGY);
+        return energy;
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    public int getEnergy() {
+        return energy;
+    }
+
+    public Planetoid getBase() {
+        return this.base;
+    }
+
+    public boolean isRecharging() {
+        return recharging;
+    }
+
+    public void setRecharging(boolean bool) {
+        if (energy == C.FIGHTER_MAX_ENERGY) {
+            recharging = false;
+        }
+        recharging = bool;
+    }
+
     public boolean laserReady() {
-        if (laserCooldown <= 0f) {
+        if (laserCooldown <= 0f && energy >= C.LASER_DAMAGE) {
             laserCooldown = C.LASER_COOLDOWN;
+            useEnergy(C.LASER_DAMAGE);
             return true;
         }
         return false;
     }
 
     public boolean grenadeReady() {
-        if (grenadeCooldown <= 0f) {
+        if (grenadeCooldown <= 0f && energy >= C.GRENADE_DAMAGE) {
             grenadeCooldown = C.GRENADE_COOLDOWN;
+            useEnergy(C.GRENADE_DAMAGE);
             return true;
         }
         return false;
@@ -175,7 +234,18 @@ public class Fighter {
         }
     }
 
+    private void update(float delta) {
+        energyBoost += delta*10;
+        if (recharging) energyBoost += delta*10;
+        while (energyBoost > 1f) {
+            addEnergy(1);
+            energyBoost -= 1f;
+        }
+    }
+
     public void render(float delta, SpriteBatch batch, Vector2 cursorPos) {
+        this.update(delta);
+
         Vector2 pos = body.getPosition();
         this.cursorPos.set(cursorPos.sub(pos));
         laserCooldown -= delta;

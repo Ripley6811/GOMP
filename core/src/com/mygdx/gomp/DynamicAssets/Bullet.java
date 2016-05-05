@@ -1,4 +1,4 @@
-package com.mygdx.gomp;
+package com.mygdx.gomp.DynamicAssets;
 
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
@@ -12,13 +12,26 @@ public abstract class Bullet {
     protected String type;
     protected Body body;
     protected PointLight light;
-    protected boolean hasCollided;
+    protected boolean collided;
     protected int age;
+    protected int damage;
 
     public Bullet(String type) {
         this.type = type;
-        this.hasCollided = false;
+        this.collided = false;
         this.age = 0;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public boolean hasCollided() {
+        return collided;
+    }
+
+    public void hasCollided(boolean newVal) {
+        collided = newVal;
     }
 
     public void updateLightPos() {

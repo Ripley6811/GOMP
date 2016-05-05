@@ -1,5 +1,6 @@
-package com.mygdx.gomp;
+package com.mygdx.gomp.StaticAssets;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -59,13 +60,19 @@ public class StarField {
         }
     }
 
-    public void render(ShapeRenderer renderer, Vector2 offset) {
+    /**
+     * Used in intro to "animate" the starfield.
+     * @param renderer
+     * @param offset
+     * @param ySpread Zero collapses starfield to horizontal line.
+     */
+    public void render(ShapeRenderer renderer, Vector2 offset, float ySpread) {
         renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(C.STAR_COLOR);
+        renderer.setColor(Color.LIGHT_GRAY);
         for (Vector2 star: stars) {
             renderer.circle(
                     star.x + offset.x * C.STAR_PARALLAX_SCALE,
-                    star.y + offset.y * C.STAR_PARALLAX_SCALE,
+                    star.y * ySpread + offset.y * C.STAR_PARALLAX_SCALE,
                     C.STAR_RADIUS
             );
         }
