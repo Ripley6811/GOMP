@@ -7,8 +7,12 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.NinePatch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
@@ -42,6 +46,7 @@ public class GameScreen extends InputAdapter implements Screen {
     private ShapeRenderer renderer;
     private ShapeRenderer hudRenderer;
     private SpriteBatch batch;
+    private SpriteBatch hudBatch;
     private RayHandler rayHandler;
 
     private World world;
@@ -59,6 +64,13 @@ public class GameScreen extends InputAdapter implements Screen {
     private PointLight playerLOS;
 
     private Vector2 cursorPos;
+
+    private NinePatch greyBarLeft;
+    private NinePatch redBarLeft;
+    private NinePatch blueBarLeft;
+    private NinePatch greyBarRight;
+    private NinePatch redBarRight;
+    private NinePatch blueBarRight;
 
     public GameScreen(MainGomp game) {
         Gdx.input.setCatchBackKey(true);
@@ -81,6 +93,7 @@ public class GameScreen extends InputAdapter implements Screen {
         batch.setProjectionMatrix(camera.combined);
         hudRenderer = new ShapeRenderer();
         hudRenderer.setAutoShapeType(true);
+        hudBatch = new SpriteBatch();
 
         // TODO: Replace this with values based on level
         starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
@@ -90,6 +103,22 @@ public class GameScreen extends InputAdapter implements Screen {
         rayHandler = new RayHandler(world);
         playerLOS = new PointLight(rayHandler, 500, Color.BLACK, 500, 0, 0);
         PointLight.setGlobalContactFilter(C.CAT_LIGHT, (short) 0, C.CAT_STATIC);
+
+        /** Load HUD sprites **/
+        greyBarLeft = new NinePatch(atlas.createSprite("ninepatch_grey_bar"),
+                1, 30, 16, 16);
+        greyBarRight = new NinePatch(atlas.createSprite("ninepatch_grey_bar_right"),
+                30, 1, 16, 16);
+
+        redBarLeft = new NinePatch(atlas.createSprite("ninepatch_red_bar"),
+                1, 30, 16, 16);
+        redBarRight = new NinePatch(atlas.createSprite("ninepatch_red_bar_right"),
+                30, 1, 16, 16);
+
+        blueBarLeft = new NinePatch(atlas.createSprite("ninepatch_blue_bar"),
+                1, 30, 16, 16);
+        blueBarRight = new NinePatch(atlas.createSprite("ninepatch_blue_bar_right"),
+                30, 1, 16, 16);
     }
 
     @Override
@@ -219,27 +248,17 @@ public class GameScreen extends InputAdapter implements Screen {
 
 
         /** HUD */
-        hudRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        hudRenderer.setColor(Color.DARK_GRAY);
-        hudRenderer.box(100, 10, 0, C.FIGHTER_MAX_HEALTH * 2, 10, 0);
-        hudRenderer.setColor(Color.RED);
-        hudRenderer.box(100, 10, 0, player.getHealth() * 2, 10, 0);
-
-        hudRenderer.setColor(Color.DARK_GRAY);
-        hudRenderer.box(100, 25, 0, C.FIGHTER_MAX_ENERGY, 10, 0);
-        hudRenderer.setColor(Color.CYAN);
-        hudRenderer.box(100, 25, 0, player.getEnergy(), 10, 0);
-
-        hudRenderer.setColor(Color.DARK_GRAY);
-        hudRenderer.box(400, 10, 0, C.FIGHTER_MAX_HEALTH * 2, 10, 0);
-        hudRenderer.setColor(Color.RED);
-        hudRenderer.box(400, 10, 0, bandit.getHealth() * 2, 10, 0);
-
-        hudRenderer.setColor(Color.DARK_GRAY);
-        hudRenderer.box(400, 25, 0, C.FIGHTER_MAX_ENERGY, 10, 0);
-        hudRenderer.setColor(Color.CYAN);
-        hudRenderer.box(400, 25, 0, bandit.getEnergy(), 10, 0);
-        hudRenderer.end();
+        hudBatch.begin();
+        greyBarLeft.draw(hudBatch, 0, 0, C.FIGHTER_MAX_HEALTH * 5, greyBarLeft.getTotalHeight());
+        redBarLeft.draw(hudBatch, 0, 0, player.getHealth() * 5, greyBarLeft.getTotalHeight());
+        greyBarLeft.draw(hudBatch, 0, 32, C.FIGHTER_MAX_ENERGY * 2, greyBarLeft.getTotalHeight());
+        blueBarLeft.draw(hudBatch, 0, 32, player.getEnergy() * 2, greyBarLeft.getTotalHeight());
+        int side = viewport.getScreenWidth();
+        greyBarRight.draw(hudBatch, side-(C.FIGHTER_MAX_HEALTH * 5), 0, C.FIGHTER_MAX_HEALTH * 5, greyBarRight.getTotalHeight());
+        redBarRight.draw(hudBatch, side-(bandit.getHealth() * 5), 0, bandit.getHealth() * 5, greyBarRight.getTotalHeight());
+        greyBarRight.draw(hudBatch, side-(C.FIGHTER_MAX_ENERGY * 2), 32, C.FIGHTER_MAX_ENERGY * 2, greyBarRight.getTotalHeight());
+        blueBarRight.draw(hudBatch, side-(bandit.getEnergy() * 2), 32, bandit.getEnergy() * 2, greyBarRight.getTotalHeight());
+        hudBatch.end();
 
 
 

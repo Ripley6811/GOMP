@@ -33,7 +33,7 @@ for the actors.
 - Made temporary procedural graphics for objects
 - Added star field background to move in slowed parallax relative to player
 - Created a planetoid image in PhotoShop and added to game
-- Created a walking robot in PhotoShop and added to game
+- Created a walking robot animation in PhotoShop and added to game
 - Created Intro screen (star splash).
 
 

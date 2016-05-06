@@ -119,6 +119,7 @@ public class TitleScreen extends InputAdapter implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        /** STAR FIELD ANIMATION **/
         if (startDelay > 0) {
             float jitter = new Random().nextFloat()*0.005f;
             float separation = Interpolation.pow3Out.apply(0, 80f, startDelay);

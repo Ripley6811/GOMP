@@ -229,8 +229,11 @@ public class Fighter {
             flyMode = false;
         }
         if (flyMode && IM.isPressingUp()) {
-            Vector2 flyVector = new Vector2(this.cursorPos).setLength(20);
-            this.body.applyLinearImpulse(flyVector, body.getPosition(), true);
+            if (this.getEnergy() > 0) {
+                this.useEnergy(1);
+                Vector2 flyVector = new Vector2(this.cursorPos).setLength(20);
+                this.body.applyLinearImpulse(flyVector, body.getPosition(), true);
+            }
         }
     }
 
