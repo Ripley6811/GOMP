@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -44,7 +45,6 @@ public class GameScreen extends InputAdapter implements Screen {
     private ExtendViewport viewport;
     private OrthographicCamera camera;
     private ShapeRenderer renderer;
-    private ShapeRenderer hudRenderer;
     private SpriteBatch batch;
     private SpriteBatch hudBatch;
     private RayHandler rayHandler;
@@ -91,8 +91,6 @@ public class GameScreen extends InputAdapter implements Screen {
         renderer.setProjectionMatrix(camera.combined);
         batch = new SpriteBatch();
         batch.setProjectionMatrix(camera.combined);
-        hudRenderer = new ShapeRenderer();
-        hudRenderer.setAutoShapeType(true);
         hudBatch = new SpriteBatch();
 
         // TODO: Replace this with values based on level
@@ -142,7 +140,8 @@ public class GameScreen extends InputAdapter implements Screen {
         bandit = new Fighter(world, atlas, planetoids.get(1), false);
 
         // Init bullet manager
-        bullets = new Bullets(world, rayHandler);
+        Animation explosionAnimation = new Animation(0.05f, atlas.createSprites("explosion"));
+        bullets = new Bullets(world, rayHandler, explosionAnimation);
 
         // Create reference to current rotation
         rotation = 0f;
@@ -241,7 +240,7 @@ public class GameScreen extends InputAdapter implements Screen {
 //        long endTime = System.nanoTime();
 //        Gdx.app.debug(TAG, "star render time: " + ((endTime - startTime)/1000000f));
         planetoids.render(batch);
-        bullets.render(renderer);
+        bullets.render(renderer, batch);
         bandit.render(delta, batch, new Vector2());
         player.render(delta, batch, cursorPos);
         rayHandler.updateAndRender();
@@ -254,10 +253,11 @@ public class GameScreen extends InputAdapter implements Screen {
         greyBarLeft.draw(hudBatch, 0, 32, C.FIGHTER_MAX_ENERGY * 2, greyBarLeft.getTotalHeight());
         blueBarLeft.draw(hudBatch, 0, 32, player.getEnergy() * 2, greyBarLeft.getTotalHeight());
         int side = viewport.getScreenWidth();
-        greyBarRight.draw(hudBatch, side-(C.FIGHTER_MAX_HEALTH * 5), 0, C.FIGHTER_MAX_HEALTH * 5, greyBarRight.getTotalHeight());
-        redBarRight.draw(hudBatch, side-(bandit.getHealth() * 5), 0, bandit.getHealth() * 5, greyBarRight.getTotalHeight());
-        greyBarRight.draw(hudBatch, side-(C.FIGHTER_MAX_ENERGY * 2), 32, C.FIGHTER_MAX_ENERGY * 2, greyBarRight.getTotalHeight());
-        blueBarRight.draw(hudBatch, side-(bandit.getEnergy() * 2), 32, bandit.getEnergy() * 2, greyBarRight.getTotalHeight());
+        Gdx.app.debug(TAG, "width: " + side);
+        greyBarRight.draw(hudBatch, 1200-(C.FIGHTER_MAX_HEALTH * 5), 0, C.FIGHTER_MAX_HEALTH * 5, greyBarRight.getTotalHeight());
+        redBarRight.draw(hudBatch, 1200-(bandit.getHealth() * 5), 0, bandit.getHealth() * 5, greyBarRight.getTotalHeight());
+        greyBarRight.draw(hudBatch, 1200-(C.FIGHTER_MAX_ENERGY * 2), 32, C.FIGHTER_MAX_ENERGY * 2, greyBarRight.getTotalHeight());
+        blueBarRight.draw(hudBatch, 1200-(bandit.getEnergy() * 2), 32, bandit.getEnergy() * 2, greyBarRight.getTotalHeight());
         hudBatch.end();
 
 

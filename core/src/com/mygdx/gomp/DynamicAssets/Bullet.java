@@ -15,6 +15,7 @@ public abstract class Bullet {
     protected boolean collided;
     protected int age;
     protected int damage;
+    protected boolean canBounce;  // On planetoids
 
     public Bullet(String type) {
         this.type = type;

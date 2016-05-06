@@ -1,6 +1,7 @@
 package com.mygdx.gomp.DynamicAssets;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -45,6 +46,9 @@ public class Fighter {
     private final TextureRegion pav_fly;
     private final TextureRegion pav_rwing;
     private final TextureRegion pav_lwing;
+    private final float TEXTURE_SCALE = 0.08f;
+    private final int textureWidth;
+    private final int textureHalfWidth;
 
 
     public Fighter(World world, TextureAtlas atlas, Planetoid base) {
@@ -101,6 +105,8 @@ public class Fighter {
         pav_rwing = atlas.createSprite("PAVsm_WING_RIGHT");
         pav_lwing = atlas.createSprite("PAVsm_WING_RIGHT");
         pav_lwing.flip(true, false);
+        textureWidth = pav_gun.getRegionWidth();
+        textureHalfWidth = textureWidth/2;
     }
 
     public int takeDamage(int amount) {
@@ -254,86 +260,62 @@ public class Fighter {
         laserCooldown -= delta;
         grenadeCooldown -= delta;
         float tempRotation = cursorPos.angle() - 90;
-        int pWidth = pav_gun.getRegionWidth();
-        int pHalfWidth = pWidth/2;
-        float wingWaddle = 6*MathUtils.sinDeg(1600*timeWalking);
+        float wingWaddle = 3*MathUtils.sinDeg(1600*timeWalking);
+        float posX = pos.x - textureHalfWidth;
+        float posY = pos.y - textureHalfWidth;
 
         batch.begin();
-        // Draw character at center
+        // Draw wings/antennae
         if (!isFlying()) {
             if (faceRight) {
-                batch.draw(pav_lwing,
-                        pos.x - pHalfWidth,
-                        pos.y - pHalfWidth,
-                        pHalfWidth, pHalfWidth,
-                        pWidth, pWidth,
-                        .08f, .08f,  // Scale
+                this.draw(batch, pav_lwing,
+                        posX, posY,
                         down.angle() + 40 + wingWaddle);
-                batch.draw(pav_lwing,
-                        pos.x - pHalfWidth,
-                        pos.y - pHalfWidth,
-                        pHalfWidth, pHalfWidth,
-                        pWidth, pWidth,
-                        .08f, .08f,  // Scale
+                this.draw(batch, pav_lwing,
+                        posX, posY,
                         down.angle() + 50 + wingWaddle);
             } else {
-                batch.draw(pav_rwing,
-                        pos.x - pHalfWidth,
-                        pos.y - pHalfWidth,
-                        pHalfWidth, pHalfWidth,
-                        pWidth, pWidth,
-                        .08f, .08f,  // Scale
+                this.draw(batch, pav_rwing,
+                        posX, posY,
                         down.angle() + 130 + wingWaddle);
-                batch.draw(pav_rwing,
-                        pos.x - pHalfWidth,
-                        pos.y - pHalfWidth,
-                        pHalfWidth, pHalfWidth,
-                        pWidth, pWidth,
-                        .08f, .08f,  // Scale
+                this.draw(batch, pav_rwing,
+                        posX, posY,
                         down.angle() + 140 + wingWaddle);
             }
         }
+        // Draw body
         if (isGrounded()) {
             TextureRegion texture = pav_walk.getKeyFrame(timeWalking);
             if (!faceRight && !texture.isFlipX()) texture.flip(true, false);
             if (faceRight && texture.isFlipX()) texture.flip(true, false);
-            batch.draw(texture,
-                    pos.x - pHalfWidth,
-                    pos.y - pHalfWidth,
-                    pHalfWidth, pHalfWidth,
-                    pWidth, pWidth,
-                    .08f, .08f,  // Scale
+            this.draw(batch, texture,
+                    posX, posY,
                     down.angle() + 90);
-
-
         } else if (isFlying()) {
-            batch.draw(pav_fly,
-                    pos.x - pHalfWidth,
-                    pos.y - pHalfWidth,
-                    pHalfWidth, pHalfWidth,
-                    pWidth, pWidth,
-                    .08f, .08f,  // Scale
+            this.draw(batch, pav_fly,
+                    posX, posY,
                     tempRotation);
         } else { // JUMPING
             TextureRegion texture = pav_trans.getKeyFrame(0f);
             if (!faceRight && !texture.isFlipX()) texture.flip(true, false);
             if (faceRight && texture.isFlipX()) texture.flip(true, false);
-            batch.draw(texture,
-                    pos.x - pHalfWidth,
-                    pos.y - pHalfWidth,
-                    pHalfWidth, pHalfWidth,
-                    pWidth, pWidth,
-                    .08f, .08f,  // Scale
+            this.draw(batch, texture,
+                    posX, posY,
                     down.angle() + 90);
         }
-        // DRAW GUN IN ALL CASES
-        batch.draw(pav_gun,
-                pos.x - pHalfWidth,
-                pos.y - pHalfWidth,
-                pHalfWidth, pHalfWidth,
-                pWidth, pWidth,
-                .08f, .08f,  // Scale
+        // Draw gun (in all cases)
+        this.draw(batch, pav_gun,
+                posX, posY,
                 tempRotation);
         batch.end();
+    }
+
+    private void draw(SpriteBatch batch, TextureRegion texture, float x, float y, float rotation) {
+        batch.draw(texture,
+                x, y,  // Placement
+                textureHalfWidth, textureHalfWidth,  // Center
+                textureWidth, textureWidth,  // Size
+                TEXTURE_SCALE, TEXTURE_SCALE,  // Scale
+                rotation);
     }
 }

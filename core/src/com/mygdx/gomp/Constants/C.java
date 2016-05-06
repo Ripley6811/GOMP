@@ -70,6 +70,8 @@ public class C {
     public static final float GRENADE_RANDOM = 1.5f;  // Degrees error
     public static final int LASER_DAMAGE = 5;
     public static final int GRENADE_DAMAGE = 25;
+    public static final int MISSILE_DAMAGE = 50;
     public static final int FIGHTER_MAX_HEALTH = 100;
     public static final int FIGHTER_MAX_ENERGY = 200;
+    public static final float EXPLOSION_TIMESPAN = 0.2f;
 }

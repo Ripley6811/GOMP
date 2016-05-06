@@ -2,10 +2,14 @@ package com.mygdx.gomp.DynamicAssets;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Contact;
@@ -31,12 +35,18 @@ public class Bullets {
 
     private Array<LaserFire> lasers;
     private Array<GrenadeFire> grenades;
+    private Array<Vector3> explosions;  // x, y, timer
 
-    public Bullets(World world, RayHandler rayHandler) {
+    private Animation explosionAnimation;
+    private final float TEXTURE_SCALE = 0.08f;
+
+    public Bullets(World world, RayHandler rayHandler, Animation explosionAnimation) {
         this.world = world;
         this.rayHandler = rayHandler;
+        this.explosionAnimation = explosionAnimation;
         lasers = new Array<LaserFire>();
         grenades = new Array<GrenadeFire>();
+        explosions = new Array<Vector3>();
     }
 
     public void addLaser(Vector2 position, Vector2 heading) {
@@ -52,6 +62,7 @@ public class Bullets {
             super("LASER");
 
             this.damage = C.LASER_DAMAGE;
+            this.canBounce = false;
 
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -85,6 +96,9 @@ public class Bullets {
     public class MissileFire extends Bullet {
         public MissileFire(Vector2 position, Vector2 heading) {
             super("MISSILE");
+
+            this.damage = C.MISSILE_DAMAGE;
+            this.canBounce = false;
         }
     }
 
@@ -93,6 +107,7 @@ public class Bullets {
             super("GRENADE");
 
             this.damage = C.GRENADE_DAMAGE;
+            this.canBounce = true;
 
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -133,31 +148,31 @@ public class Bullets {
     }
 
     public int resolveContact(Contact contact) {
-
         Bullet bullet = (Bullet) contact.getFixtureB().getUserData();
-        Gdx.app.debug(TAG, "Contact Fixture B is Bullet:" + bullet.getType());
-        if (bullet.getType() == "LASER") {
+
+        if (bullet.hasCollided()) return 0;
+
+        if (bullet.canBounce && contact.getFixtureA().getUserData() instanceof Planetoid) {
+            // Do nothing
+        } else {
             bullet.hasCollided(true);
             return bullet.damage;
-        }
-        if (bullet.getType() == "GRENADE") {
-            // Bounce if collides with planet (a circle)
-            if (contact.getFixtureA().getUserData() instanceof Planetoid) {
-
-            } else {
-                bullet.hasCollided(true);
-                return bullet.damage;
-            }
         }
         return 0;
     }
 
-    public void render(ShapeRenderer renderer) {
+    private void queueExplosion(Vector2 vector) {
+        explosions.add(new Vector3(vector, 0));
+    }
+
+    private void update(float delta) {
         // Remove dead bullets
         // TODO: Render explosion.
         for (int i=lasers.size-1; i >= 0; i--) {
             LaserFire bullet = lasers.get(i);
             bullet.updateLightPos();
+            // TODO: Need to ensure lasers are all at a constant speed? use the following line.
+//            bullet.body.setLinearVelocity(bullet.body.getLinearVelocity().setLength2(C.LASER_SPEED));
             if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.collided = true;
             if (bullet.collided) lasers.removeIndex(i).destroy(world);
         }
@@ -165,10 +180,23 @@ public class Bullets {
             GrenadeFire bullet = grenades.get(i);
             bullet.updateLightPos();
             if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.collided = true;
-            if (bullet.collided) grenades.removeIndex(i).destroy(world);
+            if (bullet.collided) {
+                queueExplosion(bullet.body.getPosition());
+                grenades.removeIndex(i).destroy(world);
+            }
         }
+        for (int i=explosions.size-1; i >= 0; i--) {
+            explosions.get(i).z += delta;
+            if (explosionAnimation.isAnimationFinished(explosions.get(i).z)) {
+                explosions.removeIndex(i);
+            }
+        }
+    }
 
-        // TODO: Render live bullets.
+    public void render(ShapeRenderer renderer, SpriteBatch batch) {
+        this.update(Gdx.graphics.getDeltaTime());
+
+        // Render live bullets.
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setColor(1, 1, MathUtils.random(.5f, 1f), 1);
         for (LaserFire laser: lasers) {
@@ -177,11 +205,19 @@ public class Bullets {
         }
         renderer.end();
         renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setColor(MathUtils.random(.5f,1f),1,1,1);
+        renderer.setColor(MathUtils.random(.5f, 1f), 1, 1, 1);
         for (GrenadeFire bullet: grenades) {
             Vector2 pos = bullet.body.getPosition();
             renderer.circle(pos.x, pos.y, C.GRENADE_RADIUS, 8);
         }
         renderer.end();
+
+        batch.begin();
+        for (Vector3 explosion: explosions) {
+            TextureRegion tr = explosionAnimation.getKeyFrame(explosion.z);
+            batch.draw(tr, explosion.x - 24, explosion.y - 24,
+                    24, 24, 48, 48, TEXTURE_SCALE, TEXTURE_SCALE, 0);
+        }
+        batch.end();
     }
 }
