@@ -166,13 +166,12 @@ public class Bullets {
     }
 
     private void update(float delta) {
-        // Remove dead bullets
-        // TODO: Render explosion.
+        // Remove dead lasers, grenades and explosions
         for (int i=lasers.size-1; i >= 0; i--) {
             LaserFire bullet = lasers.get(i);
             bullet.updateLightPos();
-            // TODO: Need to ensure lasers are all at a constant speed? use the following line.
-//            bullet.body.setLinearVelocity(bullet.body.getLinearVelocity().setLength2(C.LASER_SPEED));
+            // This line ensures lasers are all at a constant speed.
+            bullet.body.setLinearVelocity(bullet.body.getLinearVelocity().setLength2(C.LASER_SPEED));
             if (bullet.age++ > C.BULLET_AGE_LIMIT) bullet.collided = true;
             if (bullet.collided) lasers.removeIndex(i).destroy(world);
         }
@@ -195,8 +194,7 @@ public class Bullets {
 
     public void render(ShapeRenderer renderer, SpriteBatch batch) {
         this.update(Gdx.graphics.getDeltaTime());
-
-        // Render live bullets.
+        /** Lasers **/
         renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setColor(1, 1, MathUtils.random(.5f, 1f), 1);
         for (LaserFire laser: lasers) {
@@ -204,6 +202,7 @@ public class Bullets {
             renderer.line(pos, laser.body.getLinearVelocity().nor().scl(C.LASER_LENGTH).add(pos));
         }
         renderer.end();
+        /** Grenades **/
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setColor(MathUtils.random(.5f, 1f), 1, 1, 1);
         for (GrenadeFire bullet: grenades) {
@@ -211,7 +210,7 @@ public class Bullets {
             renderer.circle(pos.x, pos.y, C.GRENADE_RADIUS, 8);
         }
         renderer.end();
-
+        /** Explosions from grenades **/
         batch.begin();
         for (Vector3 explosion: explosions) {
             TextureRegion tr = explosionAnimation.getKeyFrame(explosion.z);

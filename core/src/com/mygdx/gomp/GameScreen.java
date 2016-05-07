@@ -2,18 +2,16 @@ package com.mygdx.gomp;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
@@ -73,7 +71,6 @@ public class GameScreen extends InputAdapter implements Screen {
     private NinePatch blueBarRight;
 
     public GameScreen(MainGomp game) {
-        Gdx.input.setCatchBackKey(true);
         this.game = game;
         this.level = game.level;
         this.onePlayer = game.onePlayer;
@@ -122,6 +119,7 @@ public class GameScreen extends InputAdapter implements Screen {
     @Override
     public void show() {
         Gdx.app.log(TAG, "show()");
+        Gdx.input.setCatchBackKey(true);
         Gdx.input.setInputProcessor(this);
         world.setContactListener(new ListenerClass());
 
@@ -130,7 +128,7 @@ public class GameScreen extends InputAdapter implements Screen {
          * Contact resolution expects the following order:
          *      Planetoids (surfaces)
          *      Characters (vehicles)
-         *      Bullets last
+         *      Bullets are last
          */
         // Init level planetoids
         planetoids = new Planetoids(world, level);
@@ -140,7 +138,8 @@ public class GameScreen extends InputAdapter implements Screen {
         bandit = new Fighter(world, atlas, planetoids.get(1), false);
 
         // Init bullet manager
-        Animation explosionAnimation = new Animation(0.05f, atlas.createSprites("explosion"));
+        Animation explosionAnimation = new Animation(
+                C.EXPLOSION_FRAME_RATE, atlas.createSprites("explosion"));
         bullets = new Bullets(world, rayHandler, explosionAnimation);
 
         // Create reference to current rotation
@@ -172,6 +171,12 @@ public class GameScreen extends InputAdapter implements Screen {
         return super.keyTyped(character);
     }
 
+    @Override
+    public boolean keyDown(int keycode) {
+        if (keycode == Input.Keys.ESCAPE) game.setScreen(game.titleScreen);
+        return super.keyDown(keycode);
+    }
+
     public void queryWeaponsInput(float delta) {
 
         if (IM.isFiringPrimary() && player.laserReady()) {
@@ -190,6 +195,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
     @Override
     public void render(float delta) {
+        if (delta > C.DELTA_THRESHOLD) return;  // Avoids spikes in delta value.
         cursorPos.set(viewport.unproject(
                 new Vector2(Gdx.input.getX(), Gdx.input.getY())
         ));
@@ -253,7 +259,7 @@ public class GameScreen extends InputAdapter implements Screen {
         greyBarLeft.draw(hudBatch, 0, 32, C.FIGHTER_MAX_ENERGY * 2, greyBarLeft.getTotalHeight());
         blueBarLeft.draw(hudBatch, 0, 32, player.getEnergy() * 2, greyBarLeft.getTotalHeight());
         int side = viewport.getScreenWidth();
-        Gdx.app.debug(TAG, "width: " + side);
+        // TODO: Get the visible width and fit HUD properly
         greyBarRight.draw(hudBatch, 1200-(C.FIGHTER_MAX_HEALTH * 5), 0, C.FIGHTER_MAX_HEALTH * 5, greyBarRight.getTotalHeight());
         redBarRight.draw(hudBatch, 1200-(bandit.getHealth() * 5), 0, bandit.getHealth() * 5, greyBarRight.getTotalHeight());
         greyBarRight.draw(hudBatch, 1200-(C.FIGHTER_MAX_ENERGY * 2), 32, C.FIGHTER_MAX_ENERGY * 2, greyBarRight.getTotalHeight());
@@ -298,7 +304,8 @@ public class GameScreen extends InputAdapter implements Screen {
 
     @Override
     public void hide() {
-
+        camera.rotate(rotation, 0, 0, -1);
+        rotation = 0f;
     }
 
     @Override

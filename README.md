@@ -15,6 +15,7 @@
 
 - Title/Intro Screen
 - Audio effects / Soundtrack
+- Pointers to bases
 - Health/Power/Recharge system
 - Monetization strategy
 - A.I. for main enemy
@@ -22,8 +23,9 @@
 - Add alien jumping blob invasion level. Meteors strikes release blobs.
 - Two-player / Leaderboard
 - Optimize/Auto-adjust (especially for WebGL version)
-- Engine animation (particle effect?)
+- Engine animation (PNG anime or particle effect?)
 - Add FPSLogger and in-game physics changing / planetoid creation tools
+- Combine walk and wing images for walking and transforming
 
 
 ## STEPS TAKEN

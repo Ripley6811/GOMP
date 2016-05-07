@@ -2,7 +2,6 @@ package com.mygdx.gomp.Constants;
 
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -41,6 +40,7 @@ public class C {
     public static final Vector2 STARFIELD_STD = new Vector2(80, 32);
     public static final float SURFACE_SLOW_DOWN = 0.84f;
     public static final float PAV_WALK_FRAME_RATE = 0.05f;
+    public static final float DELTA_THRESHOLD = 0.05f;
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
@@ -73,5 +73,5 @@ public class C {
     public static final int MISSILE_DAMAGE = 50;
     public static final int FIGHTER_MAX_HEALTH = 100;
     public static final int FIGHTER_MAX_ENERGY = 200;
-    public static final float EXPLOSION_TIMESPAN = 0.2f;
+    public static final float EXPLOSION_FRAME_RATE = 0.05f;
 }
