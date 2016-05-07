@@ -304,6 +304,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
     @Override
     public void hide() {
+        // Undo rotation
         camera.rotate(rotation, 0, 0, -1);
         rotation = 0f;
     }

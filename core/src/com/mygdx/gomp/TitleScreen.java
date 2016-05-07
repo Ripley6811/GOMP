@@ -118,6 +118,7 @@ public class TitleScreen extends InputAdapter implements Screen {
 
     @Override
     public void hide() {
+        // Undo rotation
         camera.rotate(-cameraSlant);
         cameraSlant = 0f;
     }
