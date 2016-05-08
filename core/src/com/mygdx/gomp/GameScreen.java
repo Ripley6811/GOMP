@@ -14,19 +14,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.Contact;
-import com.badlogic.gdx.physics.box2d.ContactImpulse;
-import com.badlogic.gdx.physics.box2d.ContactListener;
-import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.gomp.Constants.C;
 import com.mygdx.gomp.DynamicAssets.Bullets;
 import com.mygdx.gomp.DynamicAssets.Fighter;
+import com.mygdx.gomp.DynamicAssets.SpaceBlobs;
 import com.mygdx.gomp.InputMapper.IM;
-import com.mygdx.gomp.StaticAssets.Planetoid;
 import com.mygdx.gomp.StaticAssets.Planetoids;
 import com.mygdx.gomp.StaticAssets.StarField;
 
@@ -54,11 +51,13 @@ public class GameScreen extends InputAdapter implements Screen {
     private StarField starField;
     private Planetoids planetoids;
     private Fighter player;
-    private Fighter bandit;
-    private Bullets bullets;
+    protected Fighter bandit;
+    private SpaceBlobs spaceBlobs;
+    private float blobSpawnTimer = 0f;
+    protected Bullets bullets;
     private int level;
     private float rotation;
-    private boolean onePlayer;
+    protected boolean onePlayer;
     private PointLight playerLOS;
 
     private Vector2 cursorPos;
@@ -78,17 +77,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
         world = new World(new Vector2(0, 0), true);
 
-        camera = new OrthographicCamera();
-        viewport = new ExtendViewport(100, 100, camera);
-        viewport.apply(true);
-        debugRenderer = new Box2DDebugRenderer();
-
-        renderer = new ShapeRenderer();
-        renderer.setAutoShapeType(true);
-        renderer.setProjectionMatrix(camera.combined);
-        batch = new SpriteBatch();
-        batch.setProjectionMatrix(camera.combined);
-        hudBatch = new SpriteBatch();
+        this.initViewports();
 
         // TODO: Replace this with values based on level
         starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
@@ -116,12 +105,26 @@ public class GameScreen extends InputAdapter implements Screen {
                 30, 1, 16, 16);
     }
 
+    private void initViewports() {
+        debugRenderer = new Box2DDebugRenderer();
+        camera = new OrthographicCamera();
+        viewport = new ExtendViewport(100, 100, camera);
+        viewport.apply(true);
+
+        renderer = new ShapeRenderer();
+        renderer.setAutoShapeType(true);
+        renderer.setProjectionMatrix(camera.combined);
+        batch = new SpriteBatch();
+        batch.setProjectionMatrix(camera.combined);
+        hudBatch = new SpriteBatch();
+    }
+
     @Override
     public void show() {
         Gdx.app.log(TAG, "show()");
         Gdx.input.setCatchBackKey(true);
         Gdx.input.setInputProcessor(this);
-        world.setContactListener(new ListenerClass());
+        world.setContactListener(new ListenerClass(this));
 
         /**
          * IMPORTANT: Do not change order that objects are added to world.
@@ -160,6 +163,8 @@ public class GameScreen extends InputAdapter implements Screen {
                 new PointLight(rayHandler, 240, Color.BLACK, 400, circle.x + offset.x, circle.y + offset.y);
             }
         }
+
+        spaceBlobs = new SpaceBlobs(world, atlas);
     }
 
     @Override
@@ -211,6 +216,14 @@ public class GameScreen extends InputAdapter implements Screen {
 
         queryWeaponsInput(delta);
 
+        if (blobSpawnTimer > 0.8) {
+            blobSpawnTimer = 0f;
+            spaceBlobs.spawn(new Vector2(110, 100), new Vector2(MathUtils.random(-20,20), 0));
+        } else {
+            blobSpawnTimer += delta;
+        }
+        spaceBlobs.applyGravity(planetoids);
+
         // Center camera on player.
         camera.position.set(player.body.getPosition(), 0f);
 
@@ -218,11 +231,9 @@ public class GameScreen extends InputAdapter implements Screen {
         if (!player.isFlying()) {
             float rotateBit = shortestRotation(rotation, player.down.angle() + 90);
             if (player.isGrounded()) {
-                rotateBit = Math.min(rotateBit, C.ROTATE_SPEED_CAP);
-                rotateBit = Math.max(rotateBit, -C.ROTATE_SPEED_CAP);
+                rotateBit = MathUtils.clamp(rotateBit, -C.ROTATE_SPEED_CAP, C.ROTATE_SPEED_CAP);
             } else {
-                rotateBit = Math.min(rotateBit, C.ROTATE_FREEFALL_CAP);
-                rotateBit = Math.max(rotateBit, -C.ROTATE_FREEFALL_CAP);
+                rotateBit = MathUtils.clamp(rotateBit, -C.ROTATE_FREEFALL_CAP, C.ROTATE_FREEFALL_CAP);
             }
             camera.rotate(rotateBit, 0, 0, 1);
             rotation += rotateBit;  // Update current rotation reference
@@ -249,6 +260,7 @@ public class GameScreen extends InputAdapter implements Screen {
         bullets.render(renderer, batch);
         bandit.render(delta, batch, new Vector2());
         player.render(delta, batch, cursorPos);
+        spaceBlobs.render(batch);
         rayHandler.updateAndRender();
 
 
@@ -314,74 +326,76 @@ public class GameScreen extends InputAdapter implements Screen {
 
     }
 
-    public class ListenerClass implements ContactListener {
-        @Override
-        public void preSolve(Contact contact, Manifold oldManifold) {
-
-        }
-
-        @Override
-        public void postSolve(Contact contact, ContactImpulse impulse) {
-
-        }
-
-        @Override
-        public void endContact(Contact contact) {
-            if (contact.getFixtureB().getUserData() instanceof Fighter) {
-                Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
-                if (contact.getFixtureA().getUserData() instanceof Planetoid) {
-                    Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
-
-                    if (p == fighter.getBase()) {
-                        fighter.setRecharging(false);
-                        Gdx.app.debug(TAG, "Contact Fixture B is Fighter charging: " + fighter.isRecharging());
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void beginContact(Contact contact) {
-            /**
-             * Check from bullet/weapon perspective instead.
-             * Resolve bullet/weapon collisions.
-             *
-             * TODO: Send event to respective class(es) for processing
-             */
-            if (contact.getFixtureA().getBody() == player.body) {
-                Gdx.app.debug(TAG, "Contact Fixture A is Player: " + contact.getFixtureA().toString() );
-            }
-            if (contact.getFixtureB().getUserData() instanceof Fighter) {
-                Gdx.app.debug(TAG, "Contact Fixture B is Fighter: " + contact.getFixtureB().toString() );
-                Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
-                if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+//    public class ListenerClass implements ContactListener {
+//        @Override
+//        public void preSolve(Contact contact, Manifold oldManifold) {
+//
+//        }
+//
+//        @Override
+//        public void postSolve(Contact contact, ContactImpulse impulse) {
+//
+//        }
+//
+//        @Override
+//        public void endContact(Contact contact) {
+//            if (contact.getFixtureB().getUserData() instanceof Fighter) {
+//                Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
+//                if (contact.getFixtureA().getUserData() instanceof Planetoid) {
 //                    Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
-
-                    if (contact.getFixtureA().getUserData() == fighter.getBase()) {
-                        fighter.setRecharging(true);
-                        Gdx.app.debug(TAG, "Contact Fixture B is Fighter charging: " + fighter.isRecharging());
-                    }
-                }
-            }
-            // Bullet should always be fixtureB. World object ordering.
-            if (contact.getFixtureB().getBody().isBullet()) {
-                int damage = bullets.resolveContact(contact);
-
-                Object fixtureRef = contact.getFixtureA().getUserData();
-                if (fixtureRef instanceof Fighter) {
-                    int remainder = ((Fighter) fixtureRef).takeDamage(damage);
-                    Gdx.app.log(TAG, "Fighter health: " + remainder);
-                }
-            }
-
-            if (onePlayer) {
-                if (contact.getFixtureA().getBody() == bandit.body) {
-                    Gdx.app.debug(TAG, "Contact Fixture A is Bandit");
-                }
-                if (contact.getFixtureB().getBody() == bandit.body) {
-                    Gdx.app.debug(TAG, "Contact Fixture B is Bandit");
-                }
-            }
-        }
-    };
+//
+//                    if (p == fighter.getBase()) {
+//                        fighter.setRecharging(false);
+//                        Gdx.app.debug(TAG, "Contact Fixture B is Fighter charging: " + fighter.isRecharging());
+//                    }
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void beginContact(Contact contact) {
+//            /**
+//             * Check from bullet/weapon perspective instead.
+//             * Resolve bullet/weapon collisions.
+//             *
+//             * TODO: Send event to respective class(es) for processing
+//             */
+//            if (contact.getFixtureA().getBody() == player.body) {
+//                Gdx.app.debug(TAG, "Contact Fixture A is Player: " + contact.getFixtureA().toString() );
+//            }
+//            if (contact.getFixtureB().getUserData() instanceof Fighter) {
+//                Gdx.app.debug(TAG, "Contact Fixture B is Fighter: " + contact.getFixtureB().toString() );
+//                Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
+//                if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+////                    Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
+//
+//                    if (contact.getFixtureA().getUserData() == fighter.getBase()) {
+//                        fighter.setRecharging(true);
+//                        Gdx.app.debug(TAG, "Contact Fixture B is Fighter charging: " + fighter.isRecharging());
+//                    }
+//                }
+//            }
+//            // Bullet should always be fixtureB. World object ordering.
+//            if (contact.getFixtureB().getBody().isBullet()) {
+//                int damage = bullets.resolveContact(contact);
+//
+//                Object fixtureRef = contact.getFixtureA().getUserData();
+//                if (fixtureRef instanceof Fighter) {
+//                    int remainder = ((Fighter) fixtureRef).takeDamage(damage);
+//                    Gdx.app.log(TAG, "Fighter health: " + remainder);
+//                } else if (fixtureRef instanceof Blob) {
+//                    ((Blob) fixtureRef).takeDamage(damage);
+//                }
+//            }
+//
+//            if (onePlayer) {
+//                if (contact.getFixtureA().getBody() == bandit.body) {
+//                    Gdx.app.debug(TAG, "Contact Fixture A is Bandit");
+//                }
+//                if (contact.getFixtureB().getBody() == bandit.body) {
+//                    Gdx.app.debug(TAG, "Contact Fixture B is Bandit");
+//                }
+//            }
+//        }
+//    };
 }

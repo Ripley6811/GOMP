@@ -66,10 +66,26 @@ public class TitleScreen extends InputAdapter implements Screen {
         this.onePlayer = game.onePlayer;
         this.atlas = game.assets.get(C.MAIN_ATLAS);
 
+        this.loadAssets();
+        this.initViewports();
+
+        // TODO: Replace this with values based on level
+        starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
+        cursorPos = new Vector2(-100, 0);
+    }
+
+    private void loadAssets() {
         planetoidImage = atlas.createSprite("PLANETsm");
         pavJump = atlas.createSprite("PAVmd_JUMP");
         pavGun = atlas.createSprite("PAVmd_GUN");
 
+        paneLightBlue = new NinePatch(atlas.createSprite("bluepane"), 15, 15, 15, 15);
+        paneDarkBlue = new NinePatch(atlas.createSprite("bluepanedark"), 15, 15, 15, 15);
+        textStart = atlas.createSprite("text_start");
+    }
+
+    private void initViewports() {
+        /** Animation Background **/
         camera = new OrthographicCamera();
         camera.position.set(new Vector2(0, 0), 0f);
         viewport = new ExtendViewport(100, 100, camera);
@@ -81,17 +97,10 @@ public class TitleScreen extends InputAdapter implements Screen {
         batch = new SpriteBatch();
         batch.setProjectionMatrix(camera.combined);
 
+        /** UI view **/
         hudCamera = new OrthographicCamera();
         hudViewport = new ExtendViewport(800, 800, hudCamera);
         hudBatch = new SpriteBatch();
-
-        paneLightBlue = new NinePatch(atlas.createSprite("bluepane"), 15, 15, 15, 15);
-        paneDarkBlue = new NinePatch(atlas.createSprite("bluepanedark"), 15, 15, 15, 15);
-        textStart = atlas.createSprite("text_start");
-
-        // TODO: Replace this with values based on level
-        starField = new StarField(C.STARFIELD_CENTER, C.STARFIELD_STD);
-        cursorPos = new Vector2(-100, 0);
     }
 
     @Override

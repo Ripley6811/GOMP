@@ -63,7 +63,7 @@ public class C {
     public static final float LASER_START_OFFSET = 2f;
     // Destroy bullets that fly off into the void.
     public static final float BULLET_AGE_LIMIT = 300;  // Frames
-    public static final float GRENADE_SPEED = 1000f;
+    public static final float GRENADE_SPEED = 2000f;
     public static final float GRENADE_MASS = 100f;
     public static final float GRENADE_RADIUS = 0.3f;
     public static final float GRENADE_COOLDOWN = 0.4f;
@@ -73,5 +73,17 @@ public class C {
     public static final int MISSILE_DAMAGE = 50;
     public static final int FIGHTER_MAX_HEALTH = 100;
     public static final int FIGHTER_MAX_ENERGY = 200;
+    public static final float FIGHTER_ENERGY_RECHARGE_RATE = 20f;  // * Delta
+    public static final float FIGHTER_ENERGY_BASE_RECHARGE_MULTIPLIER = 2f;  // * Delta
+    public static final float FIGHTER_HEALTH_BASE_RECHARGE_RATE = 8f;  // * Delta
     public static final float EXPLOSION_FRAME_RATE = 0.05f;
+
+    /** ALIENS **/
+    public static final float BLOB_HEIGHT = .8f;  // Meters (Box2D)
+    public static final float BLOB_DENSITY = .9f;
+    public static final float BLOB_FRICTION = 0.25f;
+    public static final float BLOB_ANIMATION_RATE = 0.05f;
+    public static final int BLOB_HEALTH = 5;
+    public static final float BLOB_HIT_DAMAGE = 0.4f;
+    public static final float BLOB_IS_MOVING_THRESHOLD = 10f;
 }

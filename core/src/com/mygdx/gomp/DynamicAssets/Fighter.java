@@ -1,7 +1,5 @@
 package com.mygdx.gomp.DynamicAssets;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -28,16 +26,17 @@ public class Fighter {
     private boolean jumping;
     private boolean faceRight;
     private boolean recharging;
+    private boolean isPlayer;
     private float timeWalking;
     private float laserCooldown = 0f;
     private float grenadeCooldown = 0f;
     public Body body;  // Maintains world position
     public Vector2 down;
     public Vector2 cursorPos;
-    private int health;
-    private int energy;
+    private float health;
+    private float energy;
     private Planetoid base;
-    private float energyBoost;
+    public int blobContacts;
 
     // Textures
     private final Animation pav_walk;
@@ -47,8 +46,8 @@ public class Fighter {
     private final TextureRegion pav_rwing;
     private final TextureRegion pav_lwing;
     private final float TEXTURE_SCALE = 0.08f;
-    private final int textureWidth;
-    private final int textureHalfWidth;
+    private final int TEXTURE_WIDTH;
+    private final int TEXTURE_HALF_WIDTH;
 
 
     public Fighter(World world, TextureAtlas atlas, Planetoid base) {
@@ -61,24 +60,41 @@ public class Fighter {
         jumping = false;
         faceRight = true;
         recharging = false;
+        this.isPlayer = isPlayer;
         this.base = base;
         down = new Vector2();
         cursorPos = new Vector2();
         timeWalking = 0f;
         health = C.FIGHTER_MAX_HEALTH;
         energy = C.FIGHTER_MAX_ENERGY;
-        energyBoost = 0f;
+        blobContacts = 0;
 
+        this.initBody(world);
+
+        // Set textures
+        pav_walk = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_WALK"),
+                Animation.PlayMode.LOOP);
+        pav_trans = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_TRANS"),
+                Animation.PlayMode.NORMAL);
+        pav_gun = atlas.createSprite("PAVsm_GUN");
+        pav_fly = atlas.createSprite("PAVsm_FLY");
+        pav_rwing = atlas.createSprite("PAVsm_WING_RIGHT");
+        pav_lwing = atlas.createSprite("PAVsm_WING_RIGHT");
+        pav_lwing.flip(true, false);
+        TEXTURE_WIDTH = pav_gun.getRegionWidth();
+        TEXTURE_HALF_WIDTH = TEXTURE_WIDTH /2;
+    }
+
+    private void initBody(World world) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(new Vector2(base.getCircle().x,
                 base.getCircle().y + base.getCircle().radius));
-
         body = world.createBody(bodyDef);
-        CircleShape circle = new CircleShape();
-        circle.setRadius(C.FIGHTER_HEIGHT / 2f);
 
         // Create a fixture definition to apply our shape to
+        CircleShape circle = new CircleShape();
+        circle.setRadius(C.FIGHTER_HEIGHT / 2f);
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
         fixtureDef.density = 0.8f;
@@ -94,46 +110,33 @@ public class Fighter {
         body.createFixture(fixtureDef).setUserData(this);
 
         circle.dispose();
-
-        // Set textures
-        pav_walk = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_WALK"),
-                Animation.PlayMode.LOOP);
-        pav_trans = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_TRANS"),
-                Animation.PlayMode.NORMAL);
-        pav_gun = atlas.createSprite("PAVsm_GUN");
-        pav_fly = atlas.createSprite("PAVsm_FLY");
-        pav_rwing = atlas.createSprite("PAVsm_WING_RIGHT");
-        pav_lwing = atlas.createSprite("PAVsm_WING_RIGHT");
-        pav_lwing.flip(true, false);
-        textureWidth = pav_gun.getRegionWidth();
-        textureHalfWidth = textureWidth/2;
     }
 
-    public int takeDamage(int amount) {
+    public float takeDamage(float amount) {
         health = Math.max(health - amount, 0);
         return health;
     }
 
-    public int addHealth(int amount) {
+    public float addHealth(float amount) {
         health = Math.min(health + amount, C.FIGHTER_MAX_HEALTH);
         return health;
     }
 
-    public int useEnergy(int amount) {
+    public float useEnergy(float amount) {
         energy = Math.max(energy - amount, 0);
         return energy;
     }
 
-    public int addEnergy(int amount) {
+    public float addEnergy(float amount) {
         energy = Math.min(energy + amount, C.FIGHTER_MAX_ENERGY);
         return energy;
     }
 
-    public int getHealth() {
+    public float getHealth() {
         return health;
     }
 
-    public int getEnergy() {
+    public float getEnergy() {
         return energy;
     }
 
@@ -146,9 +149,6 @@ public class Fighter {
     }
 
     public void setRecharging(boolean bool) {
-        if (energy == C.FIGHTER_MAX_ENERGY) {
-            recharging = false;
-        }
         recharging = bool;
     }
 
@@ -244,12 +244,14 @@ public class Fighter {
     }
 
     private void update(float delta) {
-        energyBoost += delta*10;
-        if (recharging) energyBoost += delta*10;
-        while (energyBoost > 1f) {
-            addEnergy(1);
-            energyBoost -= 1f;
+        float energy = delta*C.FIGHTER_ENERGY_RECHARGE_RATE;
+        if (recharging) {
+            energy *= C.FIGHTER_ENERGY_BASE_RECHARGE_MULTIPLIER;
+            addHealth(delta*C.FIGHTER_HEALTH_BASE_RECHARGE_RATE);
         }
+        addEnergy(energy);
+
+        this.takeDamage(blobContacts * C.BLOB_HIT_DAMAGE);
     }
 
     public void render(float delta, SpriteBatch batch, Vector2 cursorPos) {
@@ -261,8 +263,8 @@ public class Fighter {
         grenadeCooldown -= delta;
         float tempRotation = cursorPos.angle() - 90;
         float wingWaddle = 3*MathUtils.sinDeg(1600*timeWalking);
-        float posX = pos.x - textureHalfWidth;
-        float posY = pos.y - textureHalfWidth;
+        float posX = pos.x - TEXTURE_HALF_WIDTH;
+        float posY = pos.y - TEXTURE_HALF_WIDTH;
 
         batch.begin();
         // Draw wings/antennae
@@ -313,8 +315,8 @@ public class Fighter {
     private void draw(SpriteBatch batch, TextureRegion texture, float x, float y, float rotation) {
         batch.draw(texture,
                 x, y,  // Placement
-                textureHalfWidth, textureHalfWidth,  // Center
-                textureWidth, textureWidth,  // Size
+                TEXTURE_HALF_WIDTH, TEXTURE_HALF_WIDTH,  // Center
+                TEXTURE_WIDTH, TEXTURE_WIDTH,  // Size
                 TEXTURE_SCALE, TEXTURE_SCALE,  // Scale
                 rotation);
     }
