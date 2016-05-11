@@ -89,14 +89,5 @@ public class ListenerClass implements ContactListener {
             Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
             fighter.blobContacts += 1;
         }
-
-//        if (gameScreen.onePlayer) {
-//            if (contact.getFixtureA().getBody() == gameScreen.bandit.body) {
-//                Gdx.app.debug(TAG, "Contact Fixture A is Bandit");
-//            }
-//            if (contact.getFixtureB().getBody() == gameScreen.bandit.body) {
-//                Gdx.app.debug(TAG, "Contact Fixture B is Bandit");
-//            }
-//        }
     }
 }

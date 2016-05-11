@@ -8,7 +8,7 @@ import box2dLight.PointLight;
 /**
  * Created by Jay on 4/27/2016.
  */
-public abstract class Bullet {
+public class Bullet {
     protected String type;
     protected Body body;
     protected PointLight light;
@@ -16,6 +16,7 @@ public abstract class Bullet {
     protected int age;
     protected int damage;
     protected boolean canBounce;  // On planetoids
+    protected boolean ignoreGravity;
 
     public Bullet(String type) {
         this.type = type;

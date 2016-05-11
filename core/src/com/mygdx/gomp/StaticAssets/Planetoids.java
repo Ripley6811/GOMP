@@ -4,8 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
@@ -54,7 +54,6 @@ public class Planetoids {
 //            Gdx.app.log(TAG, "dist2: " + dist2);
 //            Gdx.app.log(TAG, "mass: " + ((UserData) planetoid.getUserData()).mass);
             float force = C.GRAVITY * planetoid.getMass() * mass / dist2;
-
 //            Gdx.app.log(TAG, "force: " + force);
             toPlanet.setLength(force);
 

@@ -13,9 +13,9 @@ import com.badlogic.gdx.utils.JsonValue;
  */
 public class C {
     /** LOGGING LEVELS : CHOOSE ONE */
-    public static final int LOG_LEVEL = Application.LOG_NONE;
+//    public static final int LOG_LEVEL = Application.LOG_NONE;
 //    public static final int LOG_LEVEL = Application.LOG_ERROR;
-//    public static final int LOG_LEVEL = Application.LOG_INFO;
+    public static final int LOG_LEVEL = Application.LOG_INFO;
 //    public static final int LOG_LEVEL = Application.LOG_DEBUG;
 
     /** WORLD CONSTANTS */
@@ -41,11 +41,13 @@ public class C {
     public static final float SURFACE_SLOW_DOWN = 0.84f;
     public static final float PAV_WALK_FRAME_RATE = 0.05f;
     public static final float DELTA_THRESHOLD = 0.05f;
+    public static final int NUMBER_PLANETOIDS_TO_TRACK = 5;
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
+    public static final float UNIVERSAL_GRAVITATIONAL_CONSTANT = 6.673e-11f;
     public static final float PLANETOID_DENSITY = 0.15f;
-    public static final float INTERPLANETOID_DISTANCE_MULTIPLIER = 2f;
+    public static final float INTERPLANETOID_DISTANCE_MULTIPLIER = 2.4f;
     public static final float GROUNDED_THRESHOLD_MULTIPLIER = 1f;
     public static final JsonValue LEVEL_MAPS =
             new JsonReader().parse(Gdx.files.internal("json/levels.json")).get("levels");
@@ -80,8 +82,8 @@ public class C {
 
     /** ALIENS **/
     public static final float BLOB_HEIGHT = .8f;  // Meters (Box2D)
-    public static final float BLOB_DENSITY = .9f;
-    public static final float BLOB_FRICTION = 0.25f;
+    public static final float BLOB_DENSITY = .4f;
+    public static final float BLOB_FRICTION = 0.3f;
     public static final float BLOB_ANIMATION_RATE = 0.05f;
     public static final int BLOB_HEALTH = 5;
     public static final float BLOB_HIT_DAMAGE = 0.4f;
