@@ -38,10 +38,17 @@ public class ListenerClass implements ContactListener {
             Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
             if (contact.getFixtureA().getUserData() instanceof Planetoid) {
                 Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
-
+                fighter.isGrounded(false);
                 if (p == fighter.getBase()) {
                     fighter.setRecharging(false);
                 }
+            }
+        }
+        if (contact.getFixtureB().getUserData() instanceof Blob) {
+            Gdx.app.debug(TAG, "Contact Fixture B is blob: " + contact.getFixtureB().toString() );
+            Blob blob = (Blob) contact.getFixtureB().getUserData();
+            if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+                blob.isGrounded(false);
             }
         }
         if (contact.getFixtureA().getUserData() instanceof Blob
@@ -66,11 +73,17 @@ public class ListenerClass implements ContactListener {
             Gdx.app.debug(TAG, "Contact Fixture B is Fighter: " + contact.getFixtureB().toString() );
             Fighter fighter = (Fighter) contact.getFixtureB().getUserData();
             if (contact.getFixtureA().getUserData() instanceof Planetoid) {
-//                    Planetoid p = (Planetoid) contact.getFixtureA().getUserData();
-
+                fighter.isGrounded(true);
                 if (contact.getFixtureA().getUserData() == fighter.getBase()) {
                     fighter.setRecharging(true);
                 }
+            }
+        }
+        if (contact.getFixtureB().getUserData() instanceof Blob) {
+            Gdx.app.debug(TAG, "Contact Fixture B is blob: " + contact.getFixtureB().toString());
+            Blob blob = (Blob) contact.getFixtureB().getUserData();
+            if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+                blob.isGrounded(true);
             }
         }
         // Bullet should always be fixtureB. World object ordering.
@@ -79,10 +92,9 @@ public class ListenerClass implements ContactListener {
 
             Object fixtureRef = contact.getFixtureA().getUserData();
             if (fixtureRef instanceof Fighter) {
-                float remainder = ((Fighter) fixtureRef).takeDamage(damage);
-                Gdx.app.log(TAG, "Fighter health: " + remainder);
+                ((Fighter) fixtureRef).damage(damage);
             } else if (fixtureRef instanceof Blob) {
-                ((Blob) fixtureRef).takeDamage(damage);
+                ((Blob) fixtureRef).damage(damage);
             }
         } else if (contact.getFixtureA().getUserData() instanceof Blob
                 && contact.getFixtureB().getUserData() instanceof Fighter) {

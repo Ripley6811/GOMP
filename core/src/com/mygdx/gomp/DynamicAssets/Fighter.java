@@ -19,7 +19,7 @@ import com.mygdx.gomp.StaticAssets.Planetoids;
 /**
  * Created by Jay on 4/26/2016.
  */
-public class Fighter {
+public class Fighter extends ActorBase {
     private static final String TAG = Fighter.class.getName();
     private boolean flyMode;
     private boolean grounded;
@@ -30,10 +30,7 @@ public class Fighter {
     private float timeWalking;
     private float laserCooldown = 0f;
     private float grenadeCooldown = 0f;
-    public Body body;  // Maintains world position
-    public Vector2 down;
     public Vector2 cursorPos;
-    private float health;
     private float energy;
     private Planetoid base;
     public int blobContacts;
@@ -65,11 +62,11 @@ public class Fighter {
         down = new Vector2();
         cursorPos = new Vector2();
         timeWalking = 0f;
-        health = C.FIGHTER_MAX_HEALTH;
+        this.initHealth(C.FIGHTER_MAX_HEALTH);
         energy = C.FIGHTER_MAX_ENERGY;
         blobContacts = 0;
 
-        this.initBody(world);
+        this.initWorldBody(world);
 
         // Set textures
         pav_walk = new Animation(C.PAV_WALK_FRAME_RATE, atlas.findRegions("PAVsm_WALK"),
@@ -85,7 +82,8 @@ public class Fighter {
         TEXTURE_HALF_WIDTH = TEXTURE_WIDTH /2;
     }
 
-    private void initBody(World world) {
+    @Override
+    protected void initWorldBody(World world) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(new Vector2(base.getCircle().x,
@@ -112,15 +110,15 @@ public class Fighter {
         circle.dispose();
     }
 
-    public float takeDamage(float amount) {
-        health = Math.max(health - amount, 0);
-        return health;
-    }
+//    public float takeDamage(float amount) {
+//        health = Math.max(health - amount, 0);
+//        return health;
+//    }
 
-    public float addHealth(float amount) {
-        health = Math.min(health + amount, C.FIGHTER_MAX_HEALTH);
-        return health;
-    }
+//    public float addHealth(float amount) {
+//        health = Math.min(health + amount, C.FIGHTER_MAX_HEALTH);
+//        return health;
+//    }
 
     public float useEnergy(float amount) {
         energy = Math.max(energy - amount, 0);
@@ -132,9 +130,9 @@ public class Fighter {
         return energy;
     }
 
-    public float getHealth() {
-        return health;
-    }
+//    public float getHealth() {
+//        return health;
+//    }
 
     public float getEnergy() {
         return energy;
@@ -152,7 +150,7 @@ public class Fighter {
         recharging = bool;
     }
 
-    public boolean laserReady() {
+    public boolean fireLaser() {
         if (laserCooldown <= 0f && energy >= C.LASER_DAMAGE) {
             laserCooldown = C.LASER_COOLDOWN;
             useEnergy(C.LASER_DAMAGE);
@@ -161,13 +159,17 @@ public class Fighter {
         return false;
     }
 
-    public boolean grenadeReady() {
+    public boolean fireGrenade() {
         if (grenadeCooldown <= 0f && energy >= C.GRENADE_DAMAGE) {
             grenadeCooldown = C.GRENADE_COOLDOWN;
             useEnergy(C.GRENADE_DAMAGE);
             return true;
         }
         return false;
+    }
+
+    public void isGrounded(boolean bool) {
+        grounded = bool;
     }
 
     public boolean isGrounded() {
@@ -237,7 +239,7 @@ public class Fighter {
         if (flyMode && IM.isPressingUp()) {
             if (this.getEnergy() > 0) {
                 this.useEnergy(1);
-                Vector2 flyVector = new Vector2(this.cursorPos).setLength(20);
+                Vector2 flyVector = new Vector2(this.cursorPos).setLength(C.FIGHTER_FLY_SPEED);
                 this.body.applyLinearImpulse(flyVector, body.getPosition(), true);
             }
         }
@@ -247,11 +249,11 @@ public class Fighter {
         float energy = delta*C.FIGHTER_ENERGY_RECHARGE_RATE;
         if (recharging) {
             energy *= C.FIGHTER_ENERGY_BASE_RECHARGE_MULTIPLIER;
-            addHealth(delta*C.FIGHTER_HEALTH_BASE_RECHARGE_RATE);
+            this.heal(delta*C.FIGHTER_HEALTH_BASE_RECHARGE_RATE);
         }
         addEnergy(energy);
 
-        this.takeDamage(blobContacts * C.BLOB_HIT_DAMAGE);
+        this.damage(blobContacts * C.BLOB_HIT_DAMAGE);
     }
 
     public void render(float delta, SpriteBatch batch, Vector2 cursorPos) {

@@ -6,7 +6,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -51,7 +50,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
     private TextureAtlas atlas;
     private StarField starField;
-    private Planetoids planetoids;
+    protected Planetoids planetoids;
     protected Fighter player;
     protected Fighter bandit;
     protected SpaceBlobs spaceBlobs;
@@ -187,15 +186,15 @@ public class GameScreen extends InputAdapter implements Screen {
 
     public void queryWeaponsInput(float delta) {
 
-        if (IM.isFiringPrimary() && player.laserReady()) {
-            Vector2 playerPos = player.body.getPosition();
+        if (IM.isFiringPrimary() && player.fireLaser()) {
+            Vector2 playerPos = player.getPosition();
             Vector2 heading = new Vector2(cursorPos).sub(playerPos).setLength(C.LASER_START_OFFSET);
             bullets.addLaser(playerPos.add(heading), heading);
         }
 
-        if (IM.isFiringSecondary() && player.grenadeReady()) {
-            Vector2 playerPos = player.body.getPosition();
-            Vector2 playerVel = player.body.getLinearVelocity();
+        if (IM.isFiringSecondary() && player.fireGrenade()) {
+            Vector2 playerPos = player.getPosition();
+            Vector2 playerVel = player.getVelocity();
             Vector2 heading = new Vector2(cursorPos).sub(playerPos).setLength(C.LASER_START_OFFSET);
             bullets.addGrenade(playerPos.add(heading), playerVel, heading);
         }
@@ -220,7 +219,7 @@ public class GameScreen extends InputAdapter implements Screen {
         queryWeaponsInput(delta);
 
         // TODO: temporary blob spawning. Change to Blob Meteor/Blobship
-        if (blobSpawnTimer > 0.8) {
+        if (blobSpawnTimer > 2.0f) {
             blobSpawnTimer = 0f;
             spaceBlobs.spawn(new Vector2(110, 100), new Vector2(MathUtils.random(-20,20), 0));
         } else {
@@ -229,11 +228,11 @@ public class GameScreen extends InputAdapter implements Screen {
         spaceBlobs.applyGravity(planetoids);
 
         // Center camera on player.
-        camera.position.set(player.body.getPosition(), 0f);
+        camera.position.set(player.getPosition(), 0f);
 
         // Rotate camera so that player stands on top of planetoid.
         if (!player.isFlying()) {
-            float rotateBit = shortestRotation(rotation, player.down.angle() + 90);
+            float rotateBit = shortestRotation(rotation, player.getDownAngle() + 90);
             if (player.isGrounded()) {
                 rotateBit = MathUtils.clamp(rotateBit, -C.ROTATE_SPEED_CAP, C.ROTATE_SPEED_CAP);
             } else {
@@ -248,7 +247,7 @@ public class GameScreen extends InputAdapter implements Screen {
         batch.setProjectionMatrix(camera.combined);
         rayHandler.setCombinedMatrix(camera);
 
-        playerLOS.setPosition(player.body.getPosition());
+        playerLOS.setPosition(player.getPosition());
 
 
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -257,7 +256,7 @@ public class GameScreen extends InputAdapter implements Screen {
 //        debugRenderer.render(world, camera.combined);
 
 //        long startTime = System.nanoTime();
-        starField.render(batch, player.body.getPosition());  // Desktop faster
+        starField.render(batch, player.getPosition());  // Desktop faster
 //        long endTime = System.nanoTime();
 //        Gdx.app.debug(TAG, "star render time: " + ((endTime - startTime)/1000000f));
         planetoids.render(batch);

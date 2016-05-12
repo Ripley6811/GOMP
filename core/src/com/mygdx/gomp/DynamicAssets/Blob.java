@@ -1,8 +1,8 @@
 package com.mygdx.gomp.DynamicAssets;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
@@ -12,26 +12,28 @@ import com.mygdx.gomp.Constants.C;
 /**
  * Created by Jay on 5/8/2016.
  */
-public class Blob {
-    protected Body body;  // Maintains world position
-    protected Vector2 down;
-    private int health;
+public class Blob extends ActorBase {
     protected boolean moving;
     protected float moveTime;
+    protected boolean grounded;
+    private float timeToLeap;
 
     public Blob(World world, Vector2 position, Vector2 velocity) {
-        this.initWorldBody(world, position);
+        this.initWorldBody(world);
         this.down = new Vector2(velocity);
-        body.setLinearVelocity(velocity);
-        this.health = C.BLOB_HEALTH;
+        this.body.setTransform(position, velocity.angle());
+        this.body.setLinearVelocity(velocity);
+        this.initHealth(C.BLOB_HEALTH);
         this.moving = false;
         this.moveTime = 0f;
+        this.grounded = false;
+        this.timeToLeap = MathUtils.random(1f, 5f);
     }
 
-    private void initWorldBody(World world, Vector2 position) {
+    @Override
+    protected void initWorldBody(World world) {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
-        bodyDef.position.set(position);
         body = world.createBody(bodyDef);
 
         PolygonShape square = new PolygonShape();
@@ -45,8 +47,21 @@ public class Blob {
         square.dispose();
     }
 
-    public void takeDamage(int amount) {
-        health -= amount;
+    public void isGrounded(boolean bool) {
+        grounded = bool;
+    }
+
+    public boolean isGrounded() {
+        return grounded;
+    }
+
+    public void jump() {
+        timeToLeap -= Gdx.graphics.getDeltaTime();
+        if (timeToLeap < 0) {
+            timeToLeap = MathUtils.random(1f, 5f);
+            Vector2 vUp = new Vector2(this.down).rotate(180).setLength(C.FIGHTER_JUMP_SPEED);
+            this.body.applyForceToCenter(vUp, true);
+        }
     }
 
     public boolean isMoving() {
@@ -57,13 +72,5 @@ public class Blob {
             moveTime = 0f;
         }
         return moving;
-    }
-
-    public boolean isDead() {
-        return health <= 0;
-    }
-
-    public void destroy(World world) {
-        world.destroyBody(this.body);
     }
 }

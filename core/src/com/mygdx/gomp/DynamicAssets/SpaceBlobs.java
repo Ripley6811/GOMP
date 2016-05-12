@@ -18,7 +18,7 @@ import com.mygdx.gomp.StaticAssets.Planetoids;
  */
 public class SpaceBlobs {
     private static final String TAG = SpaceBlobs.class.getName();
-    public Array<Blob> blobs;  // Maintains world position
+    public Array<Blob> blobs;  // Maintains world getPosition
     private final float TEXTURE_SCALE = 0.08f;
     private final int TEXTURE_WIDTH;
     private final int TEXTURE_HALF_WIDTH;
@@ -48,14 +48,22 @@ public class SpaceBlobs {
 
     public void applyGravity(Planetoids planetoids) {
         for (Blob blob: blobs) {
-            Vector2 pos = blob.body.getPosition();
-            blob.down.set(planetoids.getGravityVector(pos, C.FIGHTER_MASS));
-            blob.body.applyForceToCenter(blob.down, true);
+            if (blob.grounded) {
+                Vector2 v = new Vector2(blob.body.getLinearVelocity());
+                v.scl(.1f);
+                blob.body.setLinearVelocity(v);
+            } else {
+                Vector2 pos = blob.body.getPosition();
+                blob.down.set(planetoids.getGravityVector(pos, C.FIGHTER_MASS));
+                blob.body.applyForceToCenter(blob.down, true);
+            }
         }
+
     }
 
     private void update() {
         for (int i=blobs.size-1; i>=0; i--) {
+            blobs.get(i).jump();
             if (blobs.get(i).isDead()) {
                 blobs.removeIndex(i).destroy(world);
             }

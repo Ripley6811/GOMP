@@ -16,7 +16,6 @@
 - Title/Intro Screen
 - Audio effects / Soundtrack
 - Pointers to bases
-- Health/Power/Recharge system
 - Monetization strategy
 - A.I. for main enemy
 - Add support units, dropjets and tanks
@@ -37,6 +36,9 @@ for the actors.
 - Created a planetoid image in PhotoShop and added to game
 - Created a walking robot animation in PhotoShop and added to game
 - Created Intro screen (star splash).
+- Changed to less realistic physics; "fictitious physics". Surface of any size body has same gravity, but smaller bodies
+decrease faster the further a small body moves. f(dist) = 4000 * (0.5)^(dist/radius)
+
 
 
 

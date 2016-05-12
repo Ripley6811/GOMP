@@ -41,7 +41,7 @@ public class C {
     public static final float SURFACE_SLOW_DOWN = 0.84f;
     public static final float PAV_WALK_FRAME_RATE = 0.05f;
     public static final float DELTA_THRESHOLD = 0.05f;
-    public static final int NUMBER_PLANETOIDS_TO_TRACK = 5;
+    public static final float STANDING_GRAVITY = 2000f;  // Force at surface of all planetoids
 
     /** PLANETOIDS */
     public static final float GRAVITY = 9.8f;
@@ -56,7 +56,8 @@ public class C {
     public static final float FIGHTER_HEIGHT = 4f;  // Meters (Box2D)
     public static final float FIGHTER_MASS = 1200f;  // kg
     public static final float FIGHTER_WALK_SPEED = 3000f;  // kg
-    public static final float FIGHTER_JUMP_SPEED = 50000f;  // kg
+    public static final float FIGHTER_JUMP_SPEED = 80000f;  // kg
+    public static final float FIGHTER_FLY_SPEED = 40f;  // kg
     public static final float LASER_SPEED = 50000f;
     public static final float LASER_RADIUS = 0.1f;
     public static final float LASER_COOLDOWN = 0.1f;
@@ -87,5 +88,5 @@ public class C {
     public static final float BLOB_ANIMATION_RATE = 0.05f;
     public static final int BLOB_HEALTH = 5;
     public static final float BLOB_HIT_DAMAGE = 0.4f;
-    public static final float BLOB_IS_MOVING_THRESHOLD = 10f;
+    public static final float BLOB_IS_MOVING_THRESHOLD = 1f;
 }

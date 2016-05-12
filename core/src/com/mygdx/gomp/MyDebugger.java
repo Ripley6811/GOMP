@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mygdx.gomp.DynamicAssets.Fighter;
 
 /**
  * Created by Jay on 5/10/2016.
@@ -32,8 +33,11 @@ public class MyDebugger {
         fpsLogger.log();  // Requires log level of Application.LOG_INFO
 
         batch.begin();
-        font.draw(batch, "# Blobs: " + gameScreen.spaceBlobs.blobs.size, 10, 140);
-        font.draw(batch, "Fighter: " + gameScreen.player.down.len(), 10, 120);
+        Fighter player = gameScreen.player;
+        font.draw(batch, "Fighter vel: " + player.getVelocity().len(), 10, 180);
+        font.draw(batch, "# Blobs: " + gameScreen.spaceBlobs.blobs.size, 10, 160);
+        font.draw(batch, "Fighter grounded: " + player.isGrounded(), 10, 140);
+        font.draw(batch, "Fighter gravity: " + player.getDownMagnitude(), 10, 120);
         font.draw(batch, "World Fixtures: " + gameScreen.world.getFixtureCount(), 10, 100);
         batch.end();
     }

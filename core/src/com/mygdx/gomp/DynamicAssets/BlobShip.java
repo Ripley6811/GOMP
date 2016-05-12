@@ -15,7 +15,7 @@ import com.mygdx.gomp.Constants.C;
  * Created by Jay on 5/8/2016.
  */
 public class BlobShip {
-    public Body body;  // Maintains world position
+    public Body body;  // Maintains world getPosition
     private boolean hasLanded;
     public Vector2 down;
     private int health;

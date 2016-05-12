@@ -40,8 +40,10 @@ public class Planetoids {
     }
 
     /**
+     * Calculates the combined pull of all planetoids on a floating object.
      *
-     * @param position Fighter position.
+     * Objects on a surface are only affected by the planetoid they are on.
+     * @param position Fighter getPosition.
      * @param mass Fighter mass.
      * @return Gravitational force vector.
      */
@@ -49,13 +51,14 @@ public class Planetoids {
         Vector2 totalForce = new Vector2(0, 0);
 
         for (Planetoid planetoid: planetoids) {
-            Vector2 toPlanet = new Vector2(planetoid.getPosition()).sub(position);
-            float dist2 = toPlanet.len2() * C.INTERPLANETOID_DISTANCE_MULTIPLIER;
-//            Gdx.app.log(TAG, "dist2: " + dist2);
-//            Gdx.app.log(TAG, "mass: " + ((UserData) planetoid.getUserData()).mass);
-            float force = C.GRAVITY * planetoid.getMass() * mass / dist2;
-//            Gdx.app.log(TAG, "force: " + force);
-            toPlanet.setLength(force);
+            Vector2 toPlanet = calculatePlanetoidPull(planetoid, position);
+//            Vector2 toPlanet = new Vector2(planetoid.getPosition()).sub(getPosition);
+//            float dist2 = toPlanet.len2() * C.INTERPLANETOID_DISTANCE_MULTIPLIER;
+////            Gdx.app.log(TAG, "dist2: " + dist2);
+////            Gdx.app.log(TAG, "mass: " + ((UserData) planetoid.getUserData()).mass);
+//            float force = C.GRAVITY * planetoid.getMass() * mass / dist2;
+////            Gdx.app.log(TAG, "force: " + force);
+//            toPlanet.setLength(force);
 
             if (isOnSurface(planetoid, position)) {
                 return toPlanet;
@@ -68,7 +71,37 @@ public class Planetoids {
     }
 
     /**
-     * Iterates through all planetoid bodies and returns true is position is on a surface.
+     * Calculates planetoid pull with main fighter height as default.
+     * @param planetoid
+     * @param point
+     * @return
+     */
+    private Vector2 calculatePlanetoidPull(Planetoid planetoid, Vector2 point) {
+        return calculatePlanetoidPull(planetoid, point, C.FIGHTER_HEIGHT / 2f);
+    }
+
+    /**
+     * Calculates the pull on an object by one planetoid.
+     *
+     * The force on an object
+     * standing on a planetoid surface is C.STANDING_GRAVITY and diminishes
+     * exponentially relative to the radius of the planetoid. Larger planetoids
+     * will have a longer reach even though surface gravity is the same for all
+     * sizes of planetoids.
+     * @param planetoid
+     * @param point
+     * @return
+     */
+    private Vector2 calculatePlanetoidPull(Planetoid planetoid, Vector2 point, float standingOffset) {
+        Vector2 vectorToPlanet = new Vector2(planetoid.getPosition()).sub(point);
+        float dist = vectorToPlanet.len();
+        float radius = planetoid.getCircle().radius;
+        float gravityMagnitude = C.STANDING_GRAVITY * 2f * (float) Math.pow(0.5f, dist / (radius + standingOffset));
+        return vectorToPlanet.setLength(gravityMagnitude);
+    }
+
+    /**
+     * Iterates through all planetoid bodies and returns true is getPosition is on a surface.
      * @param position
      * @return
      */
@@ -82,7 +115,7 @@ public class Planetoids {
     }
 
     /**
-     * Determines if vector position is considered on a particular planetoid body.
+     * Determines if vector getPosition is considered on a particular planetoid body.
      * @param planetoid
      * @param position
      * @return
