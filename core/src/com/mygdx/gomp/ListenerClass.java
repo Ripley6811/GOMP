@@ -1,13 +1,12 @@
 package com.mygdx.gomp;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Manifold;
-import com.mygdx.gomp.Constants.C;
 import com.mygdx.gomp.DynamicAssets.Blob;
+import com.mygdx.gomp.DynamicAssets.BlobShip;
 import com.mygdx.gomp.DynamicAssets.Fighter;
 import com.mygdx.gomp.StaticAssets.Planetoid;
 
@@ -77,6 +76,12 @@ public class ListenerClass implements ContactListener {
                 if (contact.getFixtureA().getUserData() == fighter.getBase()) {
                     fighter.setRecharging(true);
                 }
+            }
+        }
+        if (contact.getFixtureB().getUserData() instanceof BlobShip) {
+            BlobShip blobShip = (BlobShip) contact.getFixtureB().getUserData();
+            if (contact.getFixtureA().getUserData() instanceof Planetoid) {
+                blobShip.setAsLanded();
             }
         }
         if (contact.getFixtureB().getUserData() instanceof Blob) {

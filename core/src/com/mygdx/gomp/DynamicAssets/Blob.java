@@ -24,6 +24,7 @@ public class Blob extends ActorBase {
         this.body.setTransform(position, velocity.angle());
         this.body.setLinearVelocity(velocity);
         this.initHealth(C.BLOB_HEALTH);
+        this.setMass(C.BLOB_MASS);
         this.moving = false;
         this.moveTime = 0f;
         this.grounded = false;
@@ -42,6 +43,8 @@ public class Blob extends ActorBase {
         fixtureDef.shape = square;
         fixtureDef.density = C.BLOB_DENSITY;
         fixtureDef.friction = C.BLOB_FRICTION;
+        fixtureDef.filter.groupIndex = C.GROUP_BLOB;
+        fixtureDef.filter.categoryBits = C.CAT_BLOB;
 
         body.createFixture(fixtureDef).setUserData(this);
         square.dispose();

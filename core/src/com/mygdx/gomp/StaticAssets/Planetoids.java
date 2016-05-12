@@ -47,7 +47,7 @@ public class Planetoids {
      * @param mass Fighter mass.
      * @return Gravitational force vector.
      */
-    public Vector2 getGravityVector(Vector2 position, float mass) {
+    public Vector2 getGravityVector(Vector2 position) {
         Vector2 totalForce = new Vector2(0, 0);
 
         for (Planetoid planetoid: planetoids) {

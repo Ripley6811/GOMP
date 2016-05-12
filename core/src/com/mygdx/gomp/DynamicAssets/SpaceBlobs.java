@@ -49,16 +49,13 @@ public class SpaceBlobs {
     public void applyGravity(Planetoids planetoids) {
         for (Blob blob: blobs) {
             if (blob.grounded) {
-                Vector2 v = new Vector2(blob.body.getLinearVelocity());
+                Vector2 v = new Vector2(blob.getVelocity());
                 v.scl(.1f);
                 blob.body.setLinearVelocity(v);
             } else {
-                Vector2 pos = blob.body.getPosition();
-                blob.down.set(planetoids.getGravityVector(pos, C.FIGHTER_MASS));
-                blob.body.applyForceToCenter(blob.down, true);
+                blob.applyGravity(planetoids);
             }
         }
-
     }
 
     private void update() {

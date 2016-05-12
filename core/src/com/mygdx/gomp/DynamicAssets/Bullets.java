@@ -142,7 +142,7 @@ public class Bullets {
     public void applyGravity(Planetoids planetoids) {
         for (GrenadeFire bullet: grenades) {
             Vector2 pos = bullet.body.getPosition();
-            bullet.body.applyForceToCenter(planetoids.getGravityVector(pos, C.GRENADE_MASS), true);
+            bullet.body.applyForceToCenter(planetoids.getGravityVector(pos), true);
 
         }
     }

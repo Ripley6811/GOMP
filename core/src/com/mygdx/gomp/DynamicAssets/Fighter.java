@@ -59,6 +59,7 @@ public class Fighter extends ActorBase {
         recharging = false;
         this.isPlayer = isPlayer;
         this.base = base;
+        this.setMass(C.FIGHTER_MASS);
         down = new Vector2();
         cursorPos = new Vector2();
         timeWalking = 0f;
@@ -110,16 +111,6 @@ public class Fighter extends ActorBase {
         circle.dispose();
     }
 
-//    public float takeDamage(float amount) {
-//        health = Math.max(health - amount, 0);
-//        return health;
-//    }
-
-//    public float addHealth(float amount) {
-//        health = Math.min(health + amount, C.FIGHTER_MAX_HEALTH);
-//        return health;
-//    }
-
     public float useEnergy(float amount) {
         energy = Math.max(energy - amount, 0);
         return energy;
@@ -129,10 +120,6 @@ public class Fighter extends ActorBase {
         energy = Math.min(energy + amount, C.FIGHTER_MAX_ENERGY);
         return energy;
     }
-
-//    public float getHealth() {
-//        return health;
-//    }
 
     public float getEnergy() {
         return energy;
@@ -180,11 +167,11 @@ public class Fighter extends ActorBase {
         return flyMode;
     }
 
-    public void applyGravity(Planetoids planetoids) {
-        Vector2 pos = this.body.getPosition();
-        this.down.set(planetoids.getGravityVector(pos, C.FIGHTER_MASS));
-        this.body.applyForceToCenter(this.down, true);
-    }
+//    public void applyGravity(Planetoids planetoids) {
+//        Vector2 pos = this.body.getPosition();
+//        this.down.set(planetoids.getGravityVector(pos, C.FIGHTER_MASS));
+//        this.body.applyForceToCenter(this.down, true);
+//    }
 
     public void applyLandFriction(Planetoids planetoids) {
         // Set as grounded if very near a planetoid surface

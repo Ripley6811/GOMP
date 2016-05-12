@@ -25,13 +25,15 @@ public class C {
     // Rotation speed slowed when free-falling between surfaces.
     public static final float ROTATE_FREEFALL_CAP = ROTATE_SPEED_CAP/20f;
     public static final float PI = MathUtils.PI;
-    public static final short CAT_LIGHT = 0x0001;
-    public static final short CAT_PLAYER = 0x0002;
-    public static final short CAT_BANDIT = 0x0004;
-    public static final short CAT_BULLET = 0x0008;
-    public static final short CAT_STATIC = 0x0010;
+    public static final short CAT_LIGHT = 0x001;
+    public static final short CAT_PLAYER = 0x002;
+    public static final short CAT_BANDIT = 0x004;
+    public static final short CAT_BULLET = 0x008;
+    public static final short CAT_STATIC = 0x010;
+    public static final short CAT_BLOB = 0x020;
     public static final int GROUP_PLAYER = -1;
     public static final int GROUP_BANDIT = -2;
+    public static final int GROUP_BLOB = -3;
     public static final int NUMBER_OF_STARS = 10000;
     public static final float STAR_RADIUS = 0.2f;
     public static final Color STAR_COLOR = new Color(.4f,.4f,.4f,1f);
@@ -83,10 +85,14 @@ public class C {
 
     /** ALIENS **/
     public static final float BLOB_HEIGHT = .8f;  // Meters (Box2D)
+    public static final float BLOB_SHIP_HEIGHT = 5f;  // Meters (Box2D)
+    public static final float BLOB_MASS = 10f;  // kg
     public static final float BLOB_DENSITY = .4f;
     public static final float BLOB_FRICTION = 0.3f;
     public static final float BLOB_ANIMATION_RATE = 0.05f;
     public static final int BLOB_HEALTH = 5;
+    public static final int BLOB_SHIP_HEALTH = 100;
     public static final float BLOB_HIT_DAMAGE = 0.4f;
     public static final float BLOB_IS_MOVING_THRESHOLD = 1f;
+    public static final float BLOB_SHIP_SPAWN_RATE = 1f;  // Interval between spawning
 }

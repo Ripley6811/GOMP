@@ -18,8 +18,10 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.mygdx.gomp.Constants.C;
+import com.mygdx.gomp.DynamicAssets.BlobShip;
 import com.mygdx.gomp.DynamicAssets.Bullets;
 import com.mygdx.gomp.DynamicAssets.Fighter;
 import com.mygdx.gomp.DynamicAssets.SpaceBlobs;
@@ -53,6 +55,7 @@ public class GameScreen extends InputAdapter implements Screen {
     protected Planetoids planetoids;
     protected Fighter player;
     protected Fighter bandit;
+    private Array<BlobShip> blobShips;
     protected SpaceBlobs spaceBlobs;
     private float blobSpawnTimer = 0f;
     protected Bullets bullets;
@@ -142,6 +145,11 @@ public class GameScreen extends InputAdapter implements Screen {
         player = new Fighter(world, atlas, planetoids.get(0));
         bandit = new Fighter(world, atlas, planetoids.get(1), false);
 
+        spaceBlobs = new SpaceBlobs(world, atlas);
+        blobShips = new Array<BlobShip>();
+        blobShips.add(new BlobShip(world, atlas, spaceBlobs, new Vector2(100, 100)));
+        blobShips.add(new BlobShip(world, atlas, spaceBlobs, new Vector2(120, -100)));
+
         // Init bullet manager
         Animation explosionAnimation = new Animation(
                 C.EXPLOSION_FRAME_RATE, atlas.createSprites("explosion"));
@@ -166,7 +174,6 @@ public class GameScreen extends InputAdapter implements Screen {
             }
         }
 
-        spaceBlobs = new SpaceBlobs(world, atlas);
     }
 
     @Override
@@ -219,11 +226,9 @@ public class GameScreen extends InputAdapter implements Screen {
         queryWeaponsInput(delta);
 
         // TODO: temporary blob spawning. Change to Blob Meteor/Blobship
-        if (blobSpawnTimer > 2.0f) {
-            blobSpawnTimer = 0f;
-            spaceBlobs.spawn(new Vector2(110, 100), new Vector2(MathUtils.random(-20,20), 0));
-        } else {
-            blobSpawnTimer += delta;
+        for (BlobShip blobShip: blobShips) {
+            blobShip.applyGravity(planetoids);
+            blobShip.update(delta);
         }
         spaceBlobs.applyGravity(planetoids);
 
@@ -263,6 +268,7 @@ public class GameScreen extends InputAdapter implements Screen {
         bullets.render(renderer, batch);
         bandit.render(delta, batch, new Vector2());
         player.render(delta, batch, cursorPos);
+        for (BlobShip blobShip: blobShips) blobShip.render(batch);
         spaceBlobs.render(batch);
         rayHandler.updateAndRender();
 
