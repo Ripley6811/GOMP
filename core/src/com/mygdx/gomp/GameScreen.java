@@ -48,7 +48,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
     protected World world;
     private Box2DDebugRenderer debugRenderer;
-    private MyDebugger myDebugger;
+//    private MyDebugger myDebugger;
 
     private TextureAtlas atlas;
     private StarField starField;
@@ -78,7 +78,7 @@ public class GameScreen extends InputAdapter implements Screen {
         this.level = game.level;
         this.onePlayer = game.onePlayer;
         this.atlas = game.assets.get(C.MAIN_ATLAS);
-        this.myDebugger = new MyDebugger(this);
+//        this.myDebugger = new MyDebugger(this);
 
         world = new World(new Vector2(0, 0), true);
 
@@ -301,7 +301,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
 
 
-        myDebugger.render();
+//        myDebugger.render();
         // TODO: Draw sunny side of planetoids
 
         world.step(delta, 6, 2);

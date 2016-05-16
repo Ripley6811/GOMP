@@ -38,7 +38,7 @@ public class MyDebugger {
         font.draw(batch, "# Blobs: " + gameScreen.spaceBlobs.blobs.size, 10, 160);
         font.draw(batch, "Fighter grounded: " + player.isGrounded(), 10, 140);
         font.draw(batch, "Fighter gravity: " + player.getDownMagnitude(), 10, 120);
-        font.draw(batch, "World Fixtures: " + gameScreen.world.getFixtureCount(), 10, 100);
+//        font.draw(batch, "World Fixtures: " + gameScreen.world.getFixtureCount(), 10, 100);
         batch.end();
     }
 }

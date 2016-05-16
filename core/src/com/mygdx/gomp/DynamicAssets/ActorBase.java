@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.mygdx.gomp.StaticAssets.Planetoids;
 
 /**
+ * Base class for any dynamic body (Box2D) based creature that can die.
  * Created by Jay on 5/12/2016.
  */
 public abstract class ActorBase {

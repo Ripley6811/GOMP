@@ -13,9 +13,9 @@ import com.badlogic.gdx.utils.JsonValue;
  */
 public class C {
     /** LOGGING LEVELS : CHOOSE ONE */
-//    public static final int LOG_LEVEL = Application.LOG_NONE;
+    public static final int LOG_LEVEL = Application.LOG_NONE;
 //    public static final int LOG_LEVEL = Application.LOG_ERROR;
-    public static final int LOG_LEVEL = Application.LOG_INFO;
+//    public static final int LOG_LEVEL = Application.LOG_INFO;
 //    public static final int LOG_LEVEL = Application.LOG_DEBUG;
 
     /** WORLD CONSTANTS */

@@ -38,7 +38,7 @@ public class BlobShip extends ActorBase {
         this.down = new Vector2();
         this.hasLanded = false;
 
-        texture = new Animation(0.2f, atlas.createSprites("BlobShip"), Animation.PlayMode.LOOP_PINGPONG);
+        texture = new Animation(0.1f, atlas.createSprites("BlobShip"), Animation.PlayMode.LOOP_PINGPONG);
 
         TEXTURE_WIDTH = texture.getKeyFrame(0).getRegionWidth();
         TEXTURE_HALF_WIDTH = TEXTURE_WIDTH / 2;
